@@ -1,0 +1,5 @@
+{
+  "name": "HostGenie",
+  "description": "一个现代化的网页托管平台，用户可以上传 HTML 或使用 AI 生成网站，并通过二维码即时分享。",
+  "requestFramePermissions": []
+}
