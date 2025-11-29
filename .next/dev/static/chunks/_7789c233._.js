@@ -2476,7 +2476,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                         className: "pl-4 -mr-48 sm:pl-6 md:-mr-16 lg:px-0 lg:m-0 lg:relative lg:h-full",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
                                             className: "w-full rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 lg:absolute lg:left-0 lg:h-full lg:w-auto lg:max-w-none",
-                                            src: "https://picsum.photos/seed/hostgenie/800/600",
+                                            src: "/hero-preview.png",
                                             alt: "App interface preview"
                                         }, void 0, false, {
                                             fileName: "[project]/views/LandingPage.tsx",
@@ -2516,7 +2516,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                     }, void 0, false, {
                                         fileName: "[project]/views/LandingPage.tsx",
                                         lineNumber: 58,
-                                        columnNumber: 14
+                                        columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "mt-1 text-3xl font-extrabold text-slate-900 sm:text-4xl sm:tracking-tight",
@@ -2524,13 +2524,13 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                     }, void 0, false, {
                                         fileName: "[project]/views/LandingPage.tsx",
                                         lineNumber: 59,
-                                        columnNumber: 14
+                                        columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/views/LandingPage.tsx",
                                 lineNumber: 57,
-                                columnNumber: 12
+                                columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "grid grid-cols-1 md:grid-cols-3 gap-8",
@@ -2545,12 +2545,12 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                 }, void 0, false, {
                                                     fileName: "[project]/views/LandingPage.tsx",
                                                     lineNumber: 67,
-                                                    columnNumber: 21
+                                                    columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 66,
-                                                columnNumber: 18
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                                                 className: "text-lg font-medium text-slate-900 mb-2",
@@ -2558,7 +2558,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                             }, void 0, false, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 69,
-                                                columnNumber: 18
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                 className: "text-slate-500",
@@ -2566,13 +2566,13 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                             }, void 0, false, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 70,
-                                                columnNumber: 18
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/views/LandingPage.tsx",
                                         lineNumber: 65,
-                                        columnNumber: 15
+                                        columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "p-6 bg-slate-50 rounded-lg border border-slate-100",
@@ -2584,12 +2584,12 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                 }, void 0, false, {
                                                     fileName: "[project]/views/LandingPage.tsx",
                                                     lineNumber: 75,
-                                                    columnNumber: 21
+                                                    columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 74,
-                                                columnNumber: 18
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                                                 className: "text-lg font-medium text-slate-900 mb-2",
@@ -2597,7 +2597,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                             }, void 0, false, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 77,
-                                                columnNumber: 18
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                 className: "text-slate-500",
@@ -2605,13 +2605,13 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                             }, void 0, false, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 78,
-                                                columnNumber: 18
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/views/LandingPage.tsx",
                                         lineNumber: 73,
-                                        columnNumber: 15
+                                        columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "p-6 bg-slate-50 rounded-lg border border-slate-100",
@@ -2623,12 +2623,12 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                 }, void 0, false, {
                                                     fileName: "[project]/views/LandingPage.tsx",
                                                     lineNumber: 83,
-                                                    columnNumber: 21
+                                                    columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 82,
-                                                columnNumber: 18
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                                                 className: "text-lg font-medium text-slate-900 mb-2",
@@ -2636,7 +2636,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                             }, void 0, false, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 85,
-                                                columnNumber: 18
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                 className: "text-slate-500",
@@ -2644,19 +2644,19 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                             }, void 0, false, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 86,
-                                                columnNumber: 18
+                                                columnNumber: 15
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/views/LandingPage.tsx",
                                         lineNumber: 81,
-                                        columnNumber: 15
+                                        columnNumber: 13
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/views/LandingPage.tsx",
                                 lineNumber: 64,
-                                columnNumber: 12
+                                columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
@@ -2676,7 +2676,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                     }, void 0, false, {
                                         fileName: "[project]/views/LandingPage.tsx",
                                         lineNumber: 95,
-                                        columnNumber: 16
+                                        columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "mt-1 text-3xl font-extrabold text-slate-900 sm:text-4xl sm:tracking-tight",
@@ -2684,13 +2684,13 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                     }, void 0, false, {
                                         fileName: "[project]/views/LandingPage.tsx",
                                         lineNumber: 96,
-                                        columnNumber: 16
+                                        columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/views/LandingPage.tsx",
                                 lineNumber: 94,
-                                columnNumber: 14
+                                columnNumber: 13
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8",
@@ -2710,7 +2710,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                     }, void 0, false, {
                                                         fileName: "[project]/views/LandingPage.tsx",
                                                         lineNumber: 110,
-                                                        columnNumber: 26
+                                                        columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "w-full h-full flex items-center justify-center text-slate-300",
                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$globe$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Globe$3e$__["Globe"], {
@@ -2718,12 +2718,12 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                         }, void 0, false, {
                                                             fileName: "[project]/views/LandingPage.tsx",
                                                             lineNumber: 119,
-                                                            columnNumber: 27
+                                                            columnNumber: 25
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/views/LandingPage.tsx",
                                                         lineNumber: 118,
-                                                        columnNumber: 25
+                                                        columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity flex items-center justify-center",
@@ -2733,18 +2733,18 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                         }, void 0, false, {
                                                             fileName: "[project]/views/LandingPage.tsx",
                                                             lineNumber: 124,
-                                                            columnNumber: 27
+                                                            columnNumber: 23
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/views/LandingPage.tsx",
                                                         lineNumber: 123,
-                                                        columnNumber: 24
+                                                        columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 105,
-                                                columnNumber: 21
+                                                columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "p-5 flex-1 flex flex-col justify-between",
@@ -2758,7 +2758,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                             }, void 0, false, {
                                                                 fileName: "[project]/views/LandingPage.tsx",
                                                                 lineNumber: 132,
-                                                                columnNumber: 25
+                                                                columnNumber: 23
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                 className: "flex items-center text-sm text-slate-500 mb-4",
@@ -2768,7 +2768,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/views/LandingPage.tsx",
                                                                         lineNumber: 136,
-                                                                        columnNumber: 27
+                                                                        columnNumber: 25
                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         className: "truncate",
@@ -2776,19 +2776,19 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/views/LandingPage.tsx",
                                                                         lineNumber: 137,
-                                                                        columnNumber: 27
+                                                                        columnNumber: 25
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/views/LandingPage.tsx",
                                                                 lineNumber: 135,
-                                                                columnNumber: 25
+                                                                columnNumber: 23
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/views/LandingPage.tsx",
                                                         lineNumber: 131,
-                                                        columnNumber: 23
+                                                        columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "flex items-center justify-between pt-4 border-t border-slate-100 mt-2",
@@ -2801,7 +2801,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/views/LandingPage.tsx",
                                                                         lineNumber: 143,
-                                                                        columnNumber: 27
+                                                                        columnNumber: 25
                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                     site.views.toLocaleString(),
                                                                     " 次浏览"
@@ -2809,7 +2809,7 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                             }, void 0, true, {
                                                                 fileName: "[project]/views/LandingPage.tsx",
                                                                 lineNumber: 142,
-                                                                columnNumber: 25
+                                                                columnNumber: 23
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$Button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                                                                 variant: "ghost",
@@ -2820,30 +2820,30 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                                             }, void 0, false, {
                                                                 fileName: "[project]/views/LandingPage.tsx",
                                                                 lineNumber: 146,
-                                                                columnNumber: 25
+                                                                columnNumber: 23
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/views/LandingPage.tsx",
                                                         lineNumber: 141,
-                                                        columnNumber: 23
+                                                        columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/views/LandingPage.tsx",
                                                 lineNumber: 130,
-                                                columnNumber: 21
+                                                columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, site.id, true, {
                                         fileName: "[project]/views/LandingPage.tsx",
                                         lineNumber: 103,
-                                        columnNumber: 18
+                                        columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0)))
                             }, void 0, false, {
                                 fileName: "[project]/views/LandingPage.tsx",
                                 lineNumber: 101,
-                                columnNumber: 14
+                                columnNumber: 13
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "mt-12 text-center",
@@ -2855,12 +2855,12 @@ const LandingPage = ({ onGetStarted, publicSites, onViewSite, isLoggedIn })=>{
                                 }, void 0, false, {
                                     fileName: "[project]/views/LandingPage.tsx",
                                     lineNumber: 156,
-                                    columnNumber: 17
+                                    columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/views/LandingPage.tsx",
                                 lineNumber: 155,
-                                columnNumber: 14
+                                columnNumber: 13
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
