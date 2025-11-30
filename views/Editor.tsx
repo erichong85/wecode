@@ -7,7 +7,15 @@ import { generateHtmlCode } from '../services/geminiService';
 
 interface EditorProps {
   initialSite: HostedSite | null;
-  onSave: (data: { id?: string, title: string, htmlContent: string, isPublic: boolean, allowSourceDownload: boolean }) => void;
+  onSave: (site: {
+    id?: string;
+    title: string;
+    description?: string;
+    htmlContent: string;
+    published: boolean;
+    isPublic: boolean;
+    allowSourceDownload: boolean;
+  }) => Promise<void>;
   onCancel: () => void;
 }
 
