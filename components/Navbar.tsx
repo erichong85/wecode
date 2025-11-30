@@ -18,9 +18,9 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onNavigate, onLo
           {/* Logo always navigates to Landing Page now */}
           <div className="flex items-center cursor-pointer" onClick={() => onNavigate('landing')} title="回到首页">
             <Globe className="h-8 w-8 text-indigo-600" />
-            <span className="ml-2 text-xl font-bold text-slate-900">HostGenie</span>
+            <span className="ml-2 text-xl font-bold text-slate-900">首页</span>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {user ? (
               <>
@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onNavigate, onLo
                     后台管理
                   </Button>
                 )}
-                
+
                 <Button variant="ghost" size="sm" onClick={() => onNavigate('dashboard')} className="hidden sm:inline-flex">
                   <Layout className="w-4 h-4 mr-2" />
                   控制台
