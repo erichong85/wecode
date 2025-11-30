@@ -110,7 +110,9 @@ export const Viewer: React.FC<ViewerProps> = ({
               variant={isLiked ? "primary" : "outline"}
               size="sm"
               onClick={() => onLike(site.id)}
-              className={isLiked ? "bg-red-600 hover:bg-red-700 border-red-600" : "text-slate-300 border-slate-600 hover:bg-slate-700"}
+              className={isLiked
+                ? "bg-red-600 hover:bg-red-700 border-red-600 text-white"
+                : "bg-slate-700 text-slate-200 border-slate-600 hover:bg-slate-600"}
             >
               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
               <span className="ml-1 hidden sm:inline">{isLiked ? '已赞' : '点赞'}</span>
@@ -123,7 +125,9 @@ export const Viewer: React.FC<ViewerProps> = ({
               variant={isFavorited ? "primary" : "outline"}
               size="sm"
               onClick={() => onFavorite(site.id)}
-              className={isFavorited ? "bg-yellow-600 hover:bg-yellow-700 border-yellow-600" : "text-slate-300 border-slate-600 hover:bg-slate-700"}
+              className={isFavorited
+                ? "bg-yellow-600 hover:bg-yellow-700 border-yellow-600 text-white"
+                : "bg-slate-700 text-slate-200 border-slate-600 hover:bg-slate-600"}
             >
               <Bookmark className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
               <span className="ml-1 hidden sm:inline">{isFavorited ? '已收藏' : '收藏'}</span>
@@ -131,7 +135,7 @@ export const Viewer: React.FC<ViewerProps> = ({
           )}
 
           {site.allowSourceDownload && (
-            <Button variant="outline" size="sm" onClick={handleDownloadSource} className="text-slate-300 border-slate-600 hover:bg-slate-700 hidden lg:inline-flex">
+            <Button variant="outline" size="sm" onClick={handleDownloadSource} className="bg-slate-700 text-slate-200 border-slate-600 hover:bg-slate-600 hidden lg:inline-flex">
               <Download className="w-4 h-4 mr-2" />
               源码
             </Button>
