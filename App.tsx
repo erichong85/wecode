@@ -239,46 +239,29 @@ function App() {
     const footerStyles = `
       <style>
         html, body { min-height: 100%; margin: 0; }
-        body { display: flex; flex-direction: column; padding-bottom: 60px; }
+        body { display: flex; flex-direction: column; padding-bottom: 40px; }
         #hg-footer { 
           position: fixed;
           bottom: 0;
           left: 0;
-          right: 0;
-          padding: 8px 12px;
-          width: 100%;
-          text-align: center;
+          padding: 8px 16px;
+          text-align: left;
           font-size: 11px;
           line-height: 1.4;
           z-index: 9999;
-          background: rgba(248, 250, 252, 0.95);
+          background: rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(8px);
-          border-top: 1px solid rgba(226, 232, 240, 0.8);
-          color: #64748b;
+          color: rgba(255, 255, 255, 0.9);
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-          box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-        }
-        #hg-footer a {
-          color: #4f46e5;
-          text-decoration: none;
-          font-weight: 600;
-        }
-        #hg-footer a:hover {
-          text-decoration: underline;
+          border-radius: 0 8px 0 0;
         }
         #hg-footer p {
-          margin: 2px 0;
-          display: inline;
-        }
-        #hg-footer p + p:before {
-          content: ' | ';
-          margin: 0 6px;
-          color: #cbd5e1;
+          margin: 0;
         }
         @media (max-width: 640px) {
           #hg-footer {
             font-size: 10px;
-            padding: 6px 8px;
+            padding: 6px 12px;
           }
         }
       </style>
@@ -287,7 +270,6 @@ function App() {
     const footerHtml = `
       <!-- HostGenie Footer -->
       <footer id="hg-footer">
-        <p>托管于 <a href="${appUrl}" target="_blank">HostGenie</a></p>
         <p>技术支持微信：35808387</p>
       </footer>
     `;
