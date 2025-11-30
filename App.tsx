@@ -440,69 +440,159 @@ function App() {
 
   // Like functionality
   const handleLikeSite = async (siteId: string) => {
-    if (!user || !hasRealBackend || !supabase) return;
+    if (!user || !hasRealBackend || !supabase) {
+      alert('请先登录');
+      return;
+    }
 
     try {
+      console.log('点赞操作开始:', { userId: user.id, siteId });
+
       // Check if user already liked
-      const { data: existing } = await supabase
+      const { data: existing, error: selectError } = await supabase
         .from('user_likes')
         .select('id')
         .eq('user_id', user.id)
         .eq('site_id', siteId)
-        .single();
+        .maybeSingle();
+
+      if (selectError) {
+        console.error('查询点赞记录失败:', selectError);
+        throw selectError;
+      }
+
+      console.log('已有点赞记录:', existing);
 
       if (existing) {
         // Unlike - remove from user_likes and decrement count
-        await supabase.from('user_likes').delete().eq('id', existing.id);
-        await supabase.rpc('decrement_likes', { site_id: siteId });
+        console.log('取消点赞...');
+        const { error: deleteError } = await supabase
+          .from('user_likes')
+          .delete()
+          .eq('id', existing.id);
+
+        if (deleteError) {
+          console.error('删除点赞记录失败:', deleteError);
+          throw deleteError;
+        }
+
+        // Decrement likes count
+        const { error: rpcError } = await supabase.rpc('decrement_likes', { site_id: siteId });
+        if (rpcError) {
+          console.error('减少点赞数失败:', rpcError);
+          throw rpcError;
+        }
       } else {
         // Like - add to user_likes and increment count
-        await supabase.from('user_likes').insert({
-          user_id: user.id,
-          site_id: siteId,
-          created_at: Date.now()
-        });
-        await supabase.rpc('increment_likes', { site_id: siteId });
+        console.log('添加点赞...');
+        const { error: insertError } = await supabase
+          .from('user_likes')
+          .insert({
+            user_id: user.id,
+            site_id: siteId,
+            created_at: Date.now()
+          });
+
+        if (insertError) {
+          console.error('添加点赞记录失败:', insertError);
+          throw insertError;
+        }
+
+        // Increment likes count
+        const { error: rpcError } = await supabase.rpc('increment_likes', { site_id: siteId });
+        if (rpcError) {
+          console.error('增加点赞数失败:', rpcError);
+          throw rpcError;
+        }
       }
 
-      // Refresh sites
+      console.log('点赞操作成功，刷新数据...');
+      // Refresh sites and user interactions
       await loadSitesFromSupabase();
-    } catch (error) {
-      console.error('Like error:', error);
+      await loadUserInteractions();
+      console.log('数据刷新完成');
+    } catch (error: any) {
+      console.error('点赞失败:', error);
+      alert(`点赞失败: ${error.message || '未知错误'}`);
     }
   };
 
   // Favorite functionality
   const handleFavoriteSite = async (siteId: string) => {
-    if (!user || !hasRealBackend || !supabase) return;
+    if (!user || !hasRealBackend || !supabase) {
+      alert('请先登录');
+      return;
+    }
 
     try {
+      console.log('收藏操作开始:', { userId: user.id, siteId });
+
       // Check if user already favorited
-      const { data: existing } = await supabase
+      const { data: existing, error: selectError } = await supabase
         .from('user_favorites')
         .select('id')
         .eq('user_id', user.id)
         .eq('site_id', siteId)
-        .single();
+        .maybeSingle();
+
+      if (selectError) {
+        console.error('查询收藏记录失败:', selectError);
+        throw selectError;
+      }
+
+      console.log('已有收藏记录:', existing);
 
       if (existing) {
         // Unfavorite - remove from user_favorites and decrement count
-        await supabase.from('user_favorites').delete().eq('id', existing.id);
-        await supabase.rpc('decrement_favorites', { site_id: siteId });
+        console.log('取消收藏...');
+        const { error: deleteError } = await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('id', existing.id);
+
+        if (deleteError) {
+          console.error('删除收藏记录失败:', deleteError);
+          throw deleteError;
+        }
+
+        // Decrement favorites count
+        const { error: rpcError } = await supabase.rpc('decrement_favorites', { site_id: siteId });
+        if (rpcError) {
+          console.error('减少收藏数失败:', rpcError);
+          throw rpcError;
+        }
       } else {
         // Favorite - add to user_favorites and increment count
-        await supabase.from('user_favorites').insert({
-          user_id: user.id,
-          site_id: siteId,
-          created_at: Date.now()
-        });
-        await supabase.rpc('increment_favorites', { site_id: siteId });
+        console.log('添加收藏...');
+        const { error: insertError } = await supabase
+          .from('user_favorites')
+          .insert({
+            user_id: user.id,
+            site_id: siteId,
+            created_at: Date.now()
+          });
+
+        if (insertError) {
+          console.error('添加收藏记录失败:', insertError);
+          throw insertError;
+        }
+
+        // Increment favorites count
+        const { error: rpcError } = await supabase.rpc('increment_favorites', { site_id: siteId });
+        if (rpcError) {
+          console.error('增加收藏数失败:', rpcError);
+          throw rpcError;
+        }
       }
 
-      // Refresh sites
+      console.log('收藏操作成功，刷新数据...');
+      // Refresh sites and user interactions
       await loadSitesFromSupabase();
-    } catch (error) {
-      console.error('Favorite error:', error);
+      await loadUserInteractions();
+      console.log('数据刷新完成');
+    } catch (error: any) {
+      console.error('收藏失败:', error);
+      alert(`收藏失败: ${error.message || '未知错误'}`);
     }
   };
 
