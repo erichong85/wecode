@@ -512,161 +512,204 @@ function App() {
 
   // Favorite functionality
   const handleFavoriteSite = async (siteId: string) => {
-    // Increment favorites count
-    const { error: rpcError } = await supabase.rpc('increment_favorites', { site_id: siteId });
-    if (rpcError) {
-      console.error('增加收藏数失败:', rpcError);
-      throw rpcError;
+    if (!user || !hasRealBackend || !supabase) {
+      alert('请先登录');
+      return;
     }
-  }
 
-  console.log('收藏操作成功');
-} catch (error: any) {
-  console.error('收藏失败:', error);
-  // 回滚乐观更新
-  if (newFavoritedState) {
-    setUserFavorites(userFavorites.filter(id => id !== siteId));
-    setAllSites(allSites.map(s =>
-      s.id === siteId ? { ...s, favorites: Math.max(0, s.favorites - 1) } : s
-    ));
-  } else {
-    setUserFavorites([...userFavorites, siteId]);
-    setAllSites(allSites.map(s =>
-      s.id === siteId ? { ...s, favorites: s.favorites + 1 } : s
-    ));
-  }
-  alert(`收藏失败: ${error.message || '未知错误'}`);
-}
-  };
+    // Optimistic update - 立即更新 UI
+    const isCurrentlyFavorited = userFavorites.includes(siteId);
+    const newFavoritedState = !isCurrentlyFavorited;
 
-// Check URL Hash for Deep Linking (Preview Mode)
-useEffect(() => {
-  const handleHashChange = () => {
-    const hash = window.location.hash;
-    if (hash.startsWith('#site/')) {
-      const siteId = hash.replace('#site/', '');
-      const targetSite = allSites.find(s => s.id === siteId);
-      if (targetSite) {
-        setCurrentSite(targetSite);
-        setView('VIEWER');
-      }
+    // 立即更新本地状态
+    if (newFavoritedState) {
+      setUserFavorites([...userFavorites, siteId]);
+      setAllSites(allSites.map(s =>
+        s.id === siteId ? { ...s, favorites: s.favorites + 1 } : s
+      ));
+    } else {
+      setUserFavorites(userFavorites.filter(id => id !== siteId));
+      setAllSites(allSites.map(s =>
+        s.id === siteId ? { ...s, favorites: Math.max(0, s.favorites - 1) } : s
+      ));
     }
-  };
-  handleHashChange(); // Run on sites update
-}, [allSites]);
 
+    // 后台异步执行数据库操作
+    try {
+      console.log('收藏操作开始:', { userId: user.id, siteId });
 
-const navigateTo = (target: string) => {
-  if (target === 'landing') setView('LANDING');
-  if (target === 'dashboard') {
-    setEditingSite(null);
-    setView(user?.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
-  }
-  if (target === 'admin') setView('ADMIN');
-  if (target === 'create') {
-    setEditingSite(null);
-    setView('EDITOR');
-  }
-  if (target !== 'viewer') {
-    window.history.pushState(null, document.title, window.location.pathname + window.location.search);
-    window.scrollTo(0, 0);
-  }
-};
+      if (isCurrentlyFavorited) {
+        // Unfavorite
+        console.log('取消收藏...');
+        const { data: existing } = await supabase
+          .from('user_favorites')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('site_id', siteId)
+          .maybeSingle();
 
-if (view === 'VIEWER' && currentSite) {
-  return <Viewer
-    site={currentSite}
-    user={user}
-    onBack={() => {
-      if (user) {
-        setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
+        if (existing) {
+          await supabase.from('user_favorites').delete().eq('id', existing.id);
+          await supabase.rpc('decrement_favorites', { site_id: siteId });
+        }
       } else {
-        setView('LANDING');
+        // Favorite
+        console.log('添加收藏...');
+        await supabase.from('user_favorites').insert({
+          user_id: user.id,
+          site_id: siteId,
+          created_at: Date.now()
+        });
+        await supabase.rpc('increment_favorites', { site_id: siteId });
       }
+
+      console.log('收藏操作成功');
+    } catch (error: any) {
+      console.error('收藏失败:', error);
+      // 回滚乐观更新
+      if (newFavoritedState) {
+        setUserFavorites(userFavorites.filter(id => id !== siteId));
+        setAllSites(allSites.map(s =>
+          s.id === siteId ? { ...s, favorites: Math.max(0, s.favorites - 1) } : s
+        ));
+      } else {
+        setUserFavorites([...userFavorites, siteId]);
+        setAllSites(allSites.map(s =>
+          s.id === siteId ? { ...s, favorites: s.favorites + 1 } : s
+        ));
+      }
+      alert(`收藏失败: ${error.message || '未知错误'}`);
+    }
+  };
+
+  // Check URL Hash for Deep Linking (Preview Mode)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#site/')) {
+        const siteId = hash.replace('#site/', '');
+        const targetSite = allSites.find(s => s.id === siteId);
+        if (targetSite) {
+          setCurrentSite(targetSite);
+          setView('VIEWER');
+        }
+      }
+    };
+    handleHashChange(); // Run on sites update
+  }, [allSites]);
+
+
+  const navigateTo = (target: string) => {
+    if (target === 'landing') setView('LANDING');
+    if (target === 'dashboard') {
+      setEditingSite(null);
+      setView(user?.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
+    }
+    if (target === 'admin') setView('ADMIN');
+    if (target === 'create') {
+      setEditingSite(null);
+      setView('EDITOR');
+    }
+    if (target !== 'viewer') {
       window.history.pushState(null, document.title, window.location.pathname + window.location.search);
-    }}
-    onLike={handleLikeSite}
-    onFavorite={handleFavoriteSite}
-    isLiked={userLikes.includes(currentSite.id)}
-    isFavorited={userFavorites.includes(currentSite.id)}
-  />;
-}
+      window.scrollTo(0, 0);
+    }
+  };
 
-return (
-  <div className="min-h-screen bg-slate-50 flex flex-col">
-    <Navbar
+  if (view === 'VIEWER' && currentSite) {
+    return <Viewer
+      site={currentSite}
       user={user}
-      onLogout={handleLogout}
-      onNavigate={navigateTo}
-      onLoginClick={() => setIsAuthOpen(true)}
-    />
+      onBack={() => {
+        if (user) {
+          setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
+        } else {
+          setView('LANDING');
+        }
+        window.history.pushState(null, document.title, window.location.pathname + window.location.search);
+      }}
+      onLike={handleLikeSite}
+      onFavorite={handleFavoriteSite}
+      isLiked={userLikes.includes(currentSite.id)}
+      isFavorited={userFavorites.includes(currentSite.id)}
+    />;
+  }
 
-    {isSyncing && (
-      <div className="fixed top-0 left-0 w-full h-1 bg-indigo-100 z-[100]">
-        <div className="h-full bg-indigo-600 animate-pulse w-1/3 mx-auto"></div>
-      </div>
-    )}
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <Navbar
+        user={user}
+        onLogout={handleLogout}
+        onNavigate={navigateTo}
+        onLoginClick={() => setIsAuthOpen(true)}
+      />
 
-    <main className="flex-grow">
-      {view === 'LANDING' && (
-        <LandingPage
-          onGetStarted={() => user ? setView('DASHBOARD') : setIsAuthOpen(true)}
-          publicSites={allSites.filter(s => s.published && s.isPublic)}
-          onViewSite={handleViewSite}
-          isLoggedIn={!!user}
-        />
+      {isSyncing && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-indigo-100 z-[100]">
+          <div className="h-full bg-indigo-600 animate-pulse w-1/3 mx-auto"></div>
+        </div>
       )}
 
-      {view === 'DASHBOARD' && user && (
-        <Dashboard
-          sites={allSites.filter(s => s.userId === user.id)}
-          onCreateNew={() => { setEditingSite(null); setView('EDITOR'); }}
-          onViewSite={handleViewSite}
-          onEditSite={handleEditSite}
-          onDeleteSite={handleDeleteSite}
-        />
-      )}
+      <main className="flex-grow">
+        {view === 'LANDING' && (
+          <LandingPage
+            onGetStarted={() => user ? setView('DASHBOARD') : setIsAuthOpen(true)}
+            publicSites={allSites.filter(s => s.published && s.isPublic)}
+            onViewSite={handleViewSite}
+            isLoggedIn={!!user}
+          />
+        )}
 
-      {view === 'ADMIN' && user && user.role === 'admin' && (
-        <AdminPanel
-          users={allUsers}
-          sites={allSites}
-          onDeleteUser={() => { }} // simplified
-          onDeleteSite={handleDeleteSite}
-          onViewSite={handleViewSite}
-        />
-      )}
+        {view === 'DASHBOARD' && user && (
+          <Dashboard
+            sites={allSites.filter(s => s.userId === user.id)}
+            onCreateNew={() => { setEditingSite(null); setView('EDITOR'); }}
+            onViewSite={handleViewSite}
+            onEditSite={handleEditSite}
+            onDeleteSite={handleDeleteSite}
+          />
+        )}
 
-      {view === 'EDITOR' && user && (
-        <Editor
-          initialSite={editingSite}
-          onSave={handleSaveSite}
-          onCancel={() => {
-            setEditingSite(null);
-            setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
-          }}
-        />
-      )}
-    </main>
+        {view === 'ADMIN' && user && user.role === 'admin' && (
+          <AdminPanel
+            users={allUsers}
+            sites={allSites}
+            onDeleteUser={() => { }} // simplified
+            onDeleteSite={handleDeleteSite}
+            onViewSite={handleViewSite}
+          />
+        )}
 
-    <AuthModal
-      isOpen={isAuthOpen}
-      onClose={() => setIsAuthOpen(false)}
-      onLogin={handleLogin}
-    />
+        {view === 'EDITOR' && user && (
+          <Editor
+            initialSite={editingSite}
+            onSave={handleSaveSite}
+            onCancel={() => {
+              setEditingSite(null);
+              setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
+            }}
+          />
+        )}
+      </main>
 
-    <ConfirmModal
-      isOpen={!!deleteTargetId}
-      onClose={() => setDeleteTargetId(null)}
-      onConfirm={confirmDelete}
-      title="删除确认"
-      message="您确定要删除这个网站吗？此操作无法撤销。"
-      confirmText="删除"
-      cancelText="取消"
-      type="danger"
-    />
-  </div>
-);
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onLogin={handleLogin}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteTargetId}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={confirmDelete}
+        title="删除确认"
+        message="您确定要删除这个网站吗？此操作无法撤销。"
+        confirmText="删除"
+        cancelText="取消"
+        type="danger"
+      />
+    </div>
+  );
 }
 
 export default App;
