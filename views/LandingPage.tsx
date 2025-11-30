@@ -1,8 +1,8 @@
-
 import React from 'react';
-import { Upload, Code, Zap, Globe, Shield, Eye, User as UserIcon } from 'lucide-react';
+import { Globe, Eye } from 'lucide-react';
 import { Button } from '../components/Button';
 import { HostedSite } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -11,179 +11,168 @@ interface LandingPageProps {
   isLoggedIn: boolean;
 }
 
+// Define July Fund inspired color palette
+const CARD_THEMES = [
+  { bg: 'bg-cream-100', text: 'text-charcoal', border: 'border-charcoal/5', tag: 'bg-accent-green text-charcoal' },
+  { bg: 'bg-[#FBC02D]', text: 'text-charcoal', border: 'border-charcoal/10', tag: 'bg-charcoal text-white' }, // Soft Yellow
+  { bg: 'bg-[#a78bfa]', text: 'text-white', border: 'border-white/10', tag: 'bg-white text-charcoal' }, // Purple
+  { bg: 'bg-[#4ade80]', text: 'text-charcoal', border: 'border-charcoal/10', tag: 'bg-charcoal text-white' }, // Green
+  { bg: 'bg-[#252221]', text: 'text-cream-100', border: 'border-white/10', tag: 'bg-accent-green text-charcoal' }, // Darker than main bg (Main is #322f2e)
+  { bg: 'bg-[#FFAB91]', text: 'text-charcoal', border: 'border-charcoal/10', tag: 'bg-white text-charcoal' }, // Orange-ish
+];
+
+const getThemeForSite = (id: string) => {
+  // Simple hash function to deterministically pick a theme based on ID
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return CARD_THEMES[Math.abs(hash) % CARD_THEMES.length];
+};
+
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, publicSites, onViewSite, isLoggedIn }) => {
+  const { t } = useLanguage();
+
   return (
-    <div className="bg-white">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden pt-16 pb-20 space-y-24">
-        <div className="relative">
-          <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24">
-            <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-16 lg:max-w-none lg:mx-0 lg:px-0">
+    <div className="min-h-screen bg-charcoal font-sans selection:bg-accent-green selection:text-charcoal">
+
+      {/* Hero Section - Light Cream Background */}
+      <div className="bg-cream-100 relative pt-32 pb-20 rounded-b-[3rem] shadow-2xl z-10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-accent-green text-charcoal text-xs font-bold tracking-wider uppercase mb-8">
+              {t('landing.badge')}
+            </div>
+
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-serif text-charcoal mb-8 tracking-tight leading-[0.9]">
+              {t('landing.title_prefix')}<span className="italic">{t('landing.title_suffix')}</span>
+            </h1>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-left mt-16 max-w-3xl mx-auto">
               <div>
-                <div>
-                  <span className="h-12 w-12 rounded-md flex items-center justify-center bg-indigo-600">
-                    <Globe className="h-6 w-6 text-white" />
-                  </span>
-                </div>
-                <div className="mt-6">
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900">
-                    即时、智能的网页托管服务。
-                  </h2>
-                  <p className="mt-4 text-base sm:text-lg text-slate-500">
-                    上传 HTML 文件或让 AI 为你构建网站。即刻获得访问链接和二维码。无需配置服务器。
-                  </p>
-                  <div className="mt-6">
-                    <Button size="lg" onClick={onGetStarted}>
-                      {isLoggedIn ? '进入控制台' : '免费开始'}
-                    </Button>
-                  </div>
-                </div>
+                <h2 className="font-serif text-3xl text-charcoal mb-4">{t('landing.subtitle')}</h2>
               </div>
-            </div>
-            <div className="mt-12 sm:mt-16 lg:mt-0 lg:pl-12">
-              <div className="relative mx-auto max-w-md px-4 sm:max-w-2xl sm:px-6 lg:max-w-none lg:px-0">
-                <img
-                  className="w-full rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 lg:absolute lg:left-0 lg:h-full lg:w-auto lg:max-w-none object-cover"
-                  src="/hero-preview.png"
-                  alt="App interface preview"
-                />
+              <div>
+                <p className="text-charcoal-light text-lg leading-relaxed mb-8">
+                  {t('landing.description')}
+                </p>
+                <Button size="lg" onClick={onGetStarted} className="rounded-full px-8 border-charcoal text-charcoal hover:bg-charcoal hover:text-white transition-colors">
+                  {isLoggedIn ? t('landing.goToDashboard') : t('landing.startBuilding')}
+                </Button>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Feature Section */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-base font-semibold text-indigo-600 tracking-wide uppercase">功能特性</h2>
-            <p className="mt-1 text-3xl font-extrabold text-slate-900 sm:text-4xl sm:tracking-tight">
-              上线所需的一切。
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            <div className="p-4 sm:p-6 bg-slate-50 rounded-lg border border-slate-100">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">轻松上传</h3>
-              <p className="text-sm sm:text-base text-slate-500">拖拽 HTML 文件或直接粘贴源代码到编辑器中。</p>
-            </div>
-
-            <div className="p-4 sm:p-6 bg-slate-50 rounded-lg border border-slate-100">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">AI 生成</h3>
-              <p className="text-sm sm:text-base text-slate-500">没有灵感？让 Gemini "创建一个作品集网页"，见证代码奇迹般生成。</p>
-            </div>
-
-            <div className="p-4 sm:p-6 bg-slate-50 rounded-lg border border-slate-100">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">即时二维码</h3>
-              <p className="text-sm sm:text-base text-slate-500">每个网站都有唯一的链接和二维码。微信扫一扫即可访问。</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Community Sites Section */}
-        {publicSites && publicSites.length > 0 && (
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-white py-12">
-            <div className="text-center mb-12">
-              <h2 className="text-base font-semibold text-indigo-600 tracking-wide uppercase">社区精选</h2>
-              <p className="mt-1 text-3xl font-extrabold text-slate-900 sm:text-4xl sm:tracking-tight">
-                探索用户创造的精彩网站
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-              {publicSites.slice(0, 6).map((site) => (
-                <div key={site.id} className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col group h-full">
-                  {/* Preview Thumbnail */}
-                  <div
-                    className="h-56 bg-slate-100 relative overflow-hidden border-b border-slate-100 cursor-pointer"
-                    onClick={() => onViewSite(site)}
-                  >
-                    {site.htmlContent ? (
-                      <iframe
-                        srcDoc={site.htmlContent}
-                        className="w-[200%] h-[200%] transform scale-50 origin-top-left pointer-events-none select-none bg-white"
-                        title={site.title}
-                        tabIndex={-1}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-300">
-                        <Globe className="w-16 h-16 opacity-50" />
-                      </div>
-                    )}
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm px-6 py-2 rounded-full shadow-lg font-bold text-indigo-600">
-                        点击预览
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900 mb-2 line-clamp-1" title={site.title}>
-                        {site.title}
-                      </h3>
-                      <div className="flex items-center text-slate-600 text-sm space-x-4">
-                        <div className="flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          {site.views.toLocaleString()}
-                        </div>
-                        <div className="flex items-center text-red-600">
-                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                          </svg>
-                          {site.likes}
-                        </div>
-                        <div className="flex items-center text-yellow-600">
-                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
-                          </svg>
-                          {site.favorites}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-2">
-                      <Button variant="ghost" size="sm" onClick={() => onViewSite(site)} className="text-indigo-600 hover:text-indigo-800 p-0 hover:bg-transparent">
-                        查看详情 →
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-12 text-center">
-              <Button variant="outline" size="lg" onClick={onGetStarted}>
-                {isLoggedIn ? '创建新网站' : '创建你自己的网站'}
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Footer */}
-      <footer className="bg-slate-50 border-t border-slate-200">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
-          <div className="mt-8 md:mt-0 md:order-1">
-            <p className="text-center text-base text-slate-400">
-              &copy; 2025 溪云AI编程. 版权所有。
-            </p>
+      {/* Community Sites Section - Dark Background */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        {publicSites && publicSites.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {publicSites.slice(0, 9).map((site, index) => {
+              const theme = getThemeForSite(site.id);
+              return (
+                <div
+                  key={site.id}
+                  className={`group ${theme.bg} rounded-2xl overflow-hidden cursor-pointer transition-transform hover:-translate-y-1 duration-500 ${index % 3 === 1 ? 'lg:translate-y-12' : ''}`}
+                  onClick={() => onViewSite(site)}
+                >
+                  {/* Card Header */}
+                  <div className="p-6 pb-0 flex justify-between items-start">
+                    <div className={`inline-block px-2 py-1 ${theme.tag} text-[10px] font-bold uppercase tracking-wider rounded-sm`}>
+                      {t('common.new')}
+                    </div>
+                  </div>
+
+                  {/* Title Section */}
+                  <div className="px-6 py-8 text-center">
+                    <h3 className={`font-serif text-3xl ${theme.text} mb-2 leading-tight group-hover:underline decoration-1 underline-offset-4`}>
+                      {site.title}
+                    </h3>
+                    <p className={`text-xs ${theme.text} opacity-60 uppercase tracking-widest mt-4`}>
+                      {t('landing.byUser')} • {site.views} {t('common.views')}
+                    </p>
+                  </div>
+
+                  {/* Preview Image */}
+                  <div className="px-4 pb-4">
+                    <div className={`aspect-[4/3] rounded-xl overflow-hidden bg-white relative shadow-inner ${theme.border} border`}>
+                      {site.htmlContent ? (
+                        <iframe
+                          srcDoc={site.htmlContent}
+                          className="w-[200%] h-[200%] transform scale-50 origin-top-left pointer-events-none select-none bg-white"
+                          title={site.title}
+                          tabIndex={-1}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-300">
+                          <Globe className="w-12 h-12 opacity-20" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Date & Description (Simulated) */}
+                  <div className="px-6 pb-6 text-center">
+                    <div className={`text-[10px] font-bold uppercase tracking-wider ${theme.text} opacity-40 mb-4`}>
+                      {new Date(site.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}
+                    </div>
+                    <p className={`text-sm ${theme.text} opacity-80 line-clamp-2 mb-6 font-serif`}>
+                      {site.description || "A beautiful website created with HostGenie. Explore the design and functionality."}
+                    </p>
+
+                    {/* View Site Button with Scroll Effect */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onViewSite(site); }}
+                      className={`group/btn relative overflow-hidden rounded-full border ${theme.text === 'text-white' ? 'border-white hover:bg-white hover:text-charcoal' : 'border-charcoal hover:bg-charcoal hover:text-cream-100'} px-8 py-3 bg-transparent transition-colors mx-auto block ${theme.text}`}
+                    >
+                      <div className="relative h-4 overflow-hidden w-24">
+                        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold uppercase tracking-widest transition-transform duration-300 ease-out group-hover/btn:-translate-y-full">
+                          {t('landing.viewSite')}
+                        </span>
+                        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold uppercase tracking-widest transition-transform duration-300 ease-out translate-y-full group-hover/btn:translate-y-0">
+                          {t('landing.viewSite')}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Footer Stats */}
+                  <div className={`px-6 py-4 flex justify-center items-center border-t ${theme.border} space-x-6`}>
+                    <div className={`flex items-center text-xs font-medium ${theme.text} opacity-60`}>
+                      <Eye className="w-3 h-3 mr-1" />
+                      {site.views}
+                    </div>
+                    <div className={`flex items-center text-xs font-medium ${theme.text} opacity-60`}>
+                      <span className="w-2 h-2 rounded-full bg-red-400 mr-1"></span>
+                      {site.likes}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center text-white/60 py-24">
+            <p>{t('landing.noSites')}</p>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-24 bg-cream-100 rounded-3xl p-8 md:p-12">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex space-x-8">
+              <a href="/images/xhs-code.jpg" target="_blank" className="text-charcoal/60 hover:text-charcoal transition-colors text-sm font-medium tracking-wide">{t('footer.redNote')}</a>
+              <a href="/images/wechat-code.png" target="_blank" className="text-charcoal/60 hover:text-charcoal transition-colors text-sm font-medium tracking-wide">{t('footer.weChat')}</a>
+              <a href="/images/wechat-code.png" target="_blank" className="text-charcoal/60 hover:text-charcoal transition-colors text-sm font-medium tracking-wide">{t('footer.planet')}</a>
+            </div>
+            <div className="text-charcoal/40 text-xs font-mono">
+              {t('footer.copyright')}
+            </div>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 };

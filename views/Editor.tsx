@@ -1,300 +1,357 @@
-
-import React, { useState, useRef, useEffect } from 'react';
-import { Save, Upload, Code as CodeIcon, Sparkles, Play, ArrowLeft, Settings, Download, Globe, Lock } from 'lucide-react';
-import { Button } from '../components/Button';
-import { generateHtmlCode } from '../services/geminiService';
+import React, { useState, useEffect, useRef } from 'react';
+import { Save, ArrowLeft, Settings, Upload, Sparkles, Rocket, FileText, Utensils } from 'lucide-react';
 import { HostedSite } from '../types';
+import { Button } from '../components/Button';
+import { useLanguage } from '../contexts/LanguageContext';
+import { generateHtmlCode } from '../services/geminiService';
 
 interface EditorProps {
-  initialSite?: HostedSite | null;
+  initialSite: HostedSite | null;
   onSave: (data: { id?: string, title: string, htmlContent: string, isPublic: boolean, allowSourceDownload: boolean }) => void;
   onCancel: () => void;
 }
 
 export const Editor: React.FC<EditorProps> = ({ initialSite, onSave, onCancel }) => {
-  const [html, setHtml] = useState<string>(
-    `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的网站</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="bg-white p-8 rounded-lg shadow-lg text-center">
-        <h1 class="text-4xl font-bold text-indigo-600 mb-4">你好，世界</h1>
-        <p class="text-gray-600">欢迎来到我的个人主页。</p>
-    </div>
-</body>
-</html>`
-  );
-  const [title, setTitle] = useState('');
-  const [isPublic, setIsPublic] = useState(true);
-  const [allowSourceDownload, setAllowSourceDownload] = useState(true);
-
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [mode, setMode] = useState<'CODE' | 'PREVIEW'>('CODE');
-  const [showSettings, setShowSettings] = useState(false);
-
+  const { t } = useLanguage();
+  const [title, setTitle] = useState(initialSite?.title || '');
+  const [htmlContent, setHtmlContent] = useState(initialSite?.htmlContent || '');
+  const [isPublic, setIsPublic] = useState(initialSite?.isPublic ?? true);
+  const [allowSourceDownload, setAllowSourceDownload] = useState(initialSite?.allowSourceDownload ?? true);
+  const [activeTab, setActiveTab] = useState<'edit' | 'preview'>(initialSite ? 'preview' : 'edit');
+  const [isSaving, setIsSaving] = useState(false);
+  const [prompt, setPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
 
-  // Initialize with existing site data if in edit mode
+  // Default template if new site
   useEffect(() => {
-    if (initialSite) {
-      setTitle(initialSite.title);
-      setHtml(initialSite.htmlContent);
-      setIsPublic(initialSite.isPublic !== undefined ? initialSite.isPublic : true);
-      setAllowSourceDownload(initialSite.allowSourceDownload !== undefined ? initialSite.allowSourceDownload : true);
+    if (!initialSite && !htmlContent) {
+      setHtmlContent(`<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    h1 { color: #333; }
+  </style>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <p>Welcome to my new site!</p>
+</body>
+</html>`);
     }
   }, [initialSite]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (typeof event.target?.result === 'string') {
-        setHtml(event.target.result);
-        if (!title && !initialSite) setTitle(file.name.replace('.html', ''));
+  // Close settings when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setIsSettingsOpen(false);
       }
     };
-    reader.readAsText(file);
-  };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-  const handleAiGenerate = async () => {
-    if (!aiPrompt.trim()) return;
-    setIsAiGenerating(true);
-    try {
-      const generatedCode = await generateHtmlCode(aiPrompt);
-      setHtml(generatedCode);
-      if (!title && !initialSite) setTitle("AI 生成的网站");
-    } catch (err) {
-      alert("生成代码失败。请检查您的 API Key 并重试。");
-    } finally {
-      setIsAiGenerating(false);
-    }
-  };
-
-  const handleSave = () => {
-    // Extract title from HTML content
-    let extractedTitle = '';
-    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-    if (titleMatch && titleMatch[1]) {
-      extractedTitle = titleMatch[1].trim();
-    }
-
-    onSave({
-      id: initialSite?.id, // Pass ID if updating
-      title: extractedTitle || title || '未命名网站',
-      htmlContent: html,
+  const handleSave = async () => {
+    if (!title) return alert(t('editor.siteTitle') + ' is required');
+    setIsSaving(true);
+    await onSave({
+      id: initialSite?.id,
+      title,
+      htmlContent,
       isPublic,
       allowSourceDownload
     });
+    setIsSaving(false);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        if (content) {
+          setHtmlContent(content);
+          // Auto-extract title
+          const titleMatch = content.match(/<title>(.*?)<\/title>/i);
+          if (titleMatch && titleMatch[1]) {
+            setTitle(titleMatch[1]);
+          }
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleGenerate = async () => {
+    if (!prompt) return;
+    setIsGenerating(true);
+    try {
+      const code = await generateHtmlCode(prompt);
+      setHtmlContent(code);
+
+      // Auto-extract title from generated code
+      const titleMatch = code.match(/<title>(.*?)<\/title>/i);
+      if (titleMatch && titleMatch[1]) {
+        setTitle(titleMatch[1]);
+      }
+
+      setActiveTab('preview');
+    } catch (error) {
+      console.error("Generation failed:", error);
+      alert(t('editor.generationFailed') || "Generation failed. Please check your API key.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const applyTemplate = (type: 'startup' | 'resume' | 'menu') => {
+    let promptText = '';
+    switch (type) {
+      case 'startup':
+        promptText = "创建一个科技初创公司的落地页。使用深色主题，包含首屏大图(Hero Section)、特性网格介绍(Feature Grid)和号召性用语(CTA)按钮。使用 Tailwind CSS 设计，风格要现代、大气。";
+        break;
+      case 'resume':
+        promptText = "为一名软件工程师创建一个专业的个人简历/作品集网页。包含关于我、工作经历、技能专长和联系方式等板块。使用 Tailwind CSS，设计风格要简洁、极简主义。";
+        break;
+      case 'menu':
+        promptText = "创建一个优雅的餐厅菜单页面。包含前菜、主菜和甜点板块。使用衬线字体(Serif)和温暖的色调。使用 Tailwind CSS 进行排版。";
+        break;
+    }
+    setPrompt(promptText);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-50 relative">
-
+    <div className="h-screen flex flex-col bg-white">
       {/* Toolbar */}
-      <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm z-20 relative">
+      <div className="h-16 border-b border-charcoal/5 flex items-center justify-between px-6 bg-cream-50 shrink-0">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={onCancel}>
+          <Button variant="ghost" size="sm" onClick={onCancel} className="text-charcoal/60 hover:text-charcoal">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            返回
+            {t('common.back')}
           </Button>
-          <div className="h-6 w-px bg-slate-300"></div>
+          <div className="h-6 w-px bg-charcoal/10"></div>
           <input
             type="text"
-            placeholder="网站标题 (例如：我的作品集)"
-            className="border-none focus:ring-0 text-lg font-semibold placeholder-slate-400 w-64"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder={t('editor.siteTitle')}
+            className="bg-transparent border-none focus:ring-0 text-lg font-serif text-charcoal placeholder-charcoal/30 w-64"
           />
         </div>
 
         <div className="flex items-center space-x-3">
-          <div className="flex bg-slate-100 rounded-lg p-1 mr-4">
+          <div className="flex bg-charcoal/5 rounded-lg p-1">
             <button
-              onClick={() => setMode('CODE')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${mode === 'CODE' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+              onClick={() => setActiveTab('edit')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'edit' ? 'bg-white shadow-sm text-charcoal' : 'text-charcoal/60 hover:text-charcoal'}`}
             >
-              <CodeIcon className="w-4 h-4 inline mr-1" /> 代码
+              Code
             </button>
             <button
-              onClick={() => setMode('PREVIEW')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${mode === 'PREVIEW' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+              onClick={() => setActiveTab('preview')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'preview' ? 'bg-white shadow-sm text-charcoal' : 'text-charcoal/60 hover:text-charcoal'}`}
             >
-              <Play className="w-4 h-4 inline mr-1" /> 预览
+              {t('editor.preview')}
             </button>
           </div>
 
+          <div className="h-6 w-px bg-charcoal/10 mx-2"></div>
+
+          {/* File Upload */}
           <input
             type="file"
-            accept=".html"
             ref={fileInputRef}
-            className="hidden"
             onChange={handleFileUpload}
+            accept=".html,.htm"
+            className="hidden"
           />
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="w-4 h-4 mr-2" />
-            上传文件
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-white border-charcoal/10 text-charcoal hover:bg-charcoal/5 flex items-center gap-2 px-3"
+            title={t('editor.uploadHtml')}
+          >
+            <Upload className="w-4 h-4" />
+            <span className="text-xs font-medium">{t('editor.uploadHtml')}</span>
           </Button>
 
-          {/* Settings Toggle */}
-          <div className="relative">
+          {/* AI Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`text-charcoal/60 hover:text-charcoal ${isAiPanelOpen ? 'bg-charcoal/5 text-charcoal' : ''}`}
+            onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
+            title={t('editor.aiDesigner')}
+          >
+            <Sparkles className="w-4 h-4" />
+          </Button>
+
+          {/* Settings Dropdown */}
+          <div className="relative" ref={settingsRef}>
             <Button
-              variant={showSettings ? "secondary" : "outline"}
+              variant="ghost"
               size="sm"
-              onClick={() => setShowSettings(!showSettings)}
-              title="发布设置"
+              className={`text-charcoal/60 hover:text-charcoal ${isSettingsOpen ? 'bg-charcoal/5 text-charcoal' : ''}`}
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
             >
               <Settings className="w-4 h-4" />
             </Button>
 
-            {/* Settings Dropdown */}
-            {showSettings && (
-              <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
-                <h3 className="font-bold text-slate-900 mb-3">发布设置</h3>
-
+            {isSettingsOpen && (
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-charcoal/5 p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <h4 className="text-xs font-bold text-charcoal uppercase tracking-wider mb-4 flex items-center">
+                  <Settings className="w-3 h-3 mr-2" />
+                  {t('editor.settings')}
+                </h4>
                 <div className="space-y-4">
-                  <div className="flex items-start">
-                    <div className="flex items-center h-5">
-                      <input
-                        id="isPublic"
-                        type="checkbox"
-                        className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-slate-300 rounded"
-                        checked={isPublic}
-                        onChange={(e) => setIsPublic(e.target.checked)}
-                      />
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm font-medium text-charcoal/80 group-hover:text-charcoal">{t('editor.public')}</span>
+                    <div className={`w-10 h-6 rounded-full transition-colors relative ${isPublic ? 'bg-accent-green' : 'bg-slate-200'}`}>
+                      <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="hidden" />
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isPublic ? 'left-5' : 'left-1'}`}></div>
                     </div>
-                    <div className="ml-3 text-sm">
-                      <label htmlFor="isPublic" className="font-medium text-slate-700 flex items-center">
-                        {isPublic ? <Globe className="w-3 h-3 mr-1 text-green-500" /> : <Lock className="w-3 h-3 mr-1 text-slate-400" />}
-                        公开展示
-                      </label>
-                      <p className="text-slate-500 text-xs mt-1">
-                        {isPublic
-                          ? "您的网站将显示在社区精选列表中，所有人可见。"
-                          : "仅拥有链接的人可以访问您的网站（私有）。"}
-                      </p>
-                    </div>
-                  </div>
+                  </label>
 
-                  <div className="flex items-start">
-                    <div className="flex items-center h-5">
-                      <input
-                        id="allowDownload"
-                        type="checkbox"
-                        className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-slate-300 rounded"
-                        checked={allowSourceDownload}
-                        onChange={(e) => setAllowSourceDownload(e.target.checked)}
-                      />
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm font-medium text-charcoal/80 group-hover:text-charcoal">{t('editor.allowDownload')}</span>
+                    <div className={`w-10 h-6 rounded-full transition-colors relative ${allowSourceDownload ? 'bg-accent-green' : 'bg-slate-200'}`}>
+                      <input type="checkbox" checked={allowSourceDownload} onChange={(e) => setAllowSourceDownload(e.target.checked)} className="hidden" />
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${allowSourceDownload ? 'left-5' : 'left-1'}`}></div>
                     </div>
-                    <div className="ml-3 text-sm">
-                      <label htmlFor="allowDownload" className="font-medium text-slate-700 flex items-center">
-                        <Download className="w-3 h-3 mr-1" />
-                        允许下载源代码
-                      </label>
-                      <p className="text-slate-500 text-xs mt-1">
-                        允许访问者直接下载您的 HTML 源代码文件。
-                      </p>
-                    </div>
-                  </div>
+                  </label>
                 </div>
               </div>
             )}
           </div>
 
-          <Button variant="primary" size="sm" onClick={handleSave} disabled={!html.trim()}>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="rounded-full ml-2"
+          >
             <Save className="w-4 h-4 mr-2" />
-            {initialSite ? '更新网站' : '发布网站'}
+            {isSaving ? t('common.saving') : (initialSite ? t('editor.update') : t('editor.publish'))}
           </Button>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
-
-        {/* Editor / Preview Area */}
-        <div className={`flex-1 relative ${mode === 'CODE' ? 'p-0' : 'p-4 bg-slate-200'}`}>
-          {mode === 'CODE' ? (
-            <textarea
-              className="w-full h-full resize-none p-6 font-mono text-sm bg-slate-900 text-slate-100 outline-none custom-scrollbar leading-relaxed"
-              value={html}
-              onChange={(e) => setHtml(e.target.value)}
-              spellCheck={false}
-            />
-          ) : (
-            <div className="w-full h-full bg-white rounded-lg shadow-lg overflow-hidden">
-              <iframe
-                srcDoc={html}
-                title="preview"
-                className="w-full h-full border-0"
-                sandbox="allow-scripts"
+      {/* Main Content */}
+      <div className="flex-grow flex overflow-hidden">
+        {/* Left: Editor/Preview Area */}
+        <div className="flex-grow flex flex-col relative">
+          {/* Tab Switcher - Floating or Top */}
+          <div className="flex-grow relative">
+            {activeTab === 'edit' ? (
+              <textarea
+                value={htmlContent}
+                onChange={(e) => setHtmlContent(e.target.value)}
+                className="w-full h-full p-6 font-mono text-sm resize-none focus:ring-0 border-none bg-[#1e1e1e] text-[#d4d4d4]"
+                spellCheck={false}
               />
-            </div>
-          )}
+            ) : (
+              <iframe
+                srcDoc={htmlContent}
+                className="w-full h-full bg-white"
+                title="Preview"
+              />
+            )}
+          </div>
         </div>
 
-        {/* AI Sidebar (Only in Code Mode) */}
-        {mode === 'CODE' && (
-          <div className="w-80 bg-white border-l border-slate-200 flex flex-col shadow-lg z-10">
-            <div className="p-4 border-b border-slate-100 bg-indigo-50">
-              <div className="flex items-center text-indigo-800 font-semibold mb-1">
-                <Sparkles className="w-5 h-5 mr-2" />
-                AI 网页设计师
+        {/* Right: AI Web Designer Panel */}
+        {isAiPanelOpen && (
+          <div className="w-80 border-l border-charcoal/5 bg-white flex flex-col shrink-0 animate-in slide-in-from-right duration-200">
+            <div className="p-6 border-b border-charcoal/5 bg-gradient-to-br from-indigo-50 to-purple-50">
+              <div className="flex items-center space-x-2 text-indigo-600 mb-2">
+                <Sparkles className="w-5 h-5" />
+                <h3 className="font-bold">{t('editor.aiDesigner')}</h3>
               </div>
-              <p className="text-xs text-indigo-600">描述你的需求，Gemini 为你构建。</p>
+              <p className="text-xs text-indigo-600/70 leading-relaxed">
+                {t('editor.aiDescription')}
+              </p>
             </div>
 
-            <div className="p-4 flex-1 overflow-y-auto">
-              <label className="block text-sm font-medium text-slate-700 mb-2">提示词</label>
-              <textarea
-                className="w-full border border-slate-300 rounded-md p-3 text-sm focus:ring-indigo-500 focus:border-indigo-500 h-32 resize-none mb-3"
-                placeholder="例如：一个摄影师的个人主页，深色主题，包含画廊..."
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-              />
-              <Button
-                variant="secondary"
-                className="w-full"
-                onClick={handleAiGenerate}
-                isLoading={isAiGenerating}
-                disabled={!aiPrompt.trim()}
-              >
-                生成代码
-              </Button>
+            <div className="p-6 flex-grow overflow-y-auto">
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-charcoal uppercase tracking-wider mb-3">
+                  {t('editor.aiDesigner')}
+                </label>
+                <textarea
+                  className="w-full h-32 p-3 rounded-xl border-charcoal/10 bg-slate-50 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none placeholder-charcoal/30 transition-all"
+                  placeholder={t('editor.aiPlaceholder')}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                />
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || !prompt}
+                  className={`w-full mt-3 rounded-xl py-3 flex items-center justify-center transition-all ${isGenerating ? 'bg-indigo-400' : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700'} text-white shadow-lg shadow-indigo-200`}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      {t('editor.generate')}
+                    </>
+                  )}
+                </Button>
+              </div>
 
-              <div className="mt-6 border-t border-slate-100 pt-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">快速开始</p>
-                <div className="space-y-2">
+              <div className="pt-6 border-t border-charcoal/5">
+                <label className="block text-xs font-bold text-charcoal uppercase tracking-wider mb-4 flex items-center">
+                  <Rocket className="w-3 h-3 mr-2" />
+                  {t('editor.quickStart')}
+                </label>
+
+                <div className="space-y-3">
                   <button
-                    className="w-full text-left text-sm p-2 hover:bg-slate-50 rounded text-slate-600 transition-colors"
-                    onClick={() => setAiPrompt("一个现代化的创业公司落地页，包含首屏大图、特性网格介绍和价格表。")}
+                    onClick={() => applyTemplate('startup')}
+                    className="w-full flex items-center p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-charcoal/5 transition-all group text-left"
                   >
-                    🚀 创业公司落地页
+                    <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                      <Rocket className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium text-charcoal/80 group-hover:text-charcoal">{t('editor.templates.startup')}</span>
                   </button>
+
                   <button
-                    className="w-full text-left text-sm p-2 hover:bg-slate-50 rounded text-slate-600 transition-colors"
-                    onClick={() => setAiPrompt("一个极简风格的个人电子简历，包含联系方式、技能列表和工作经历。")}
+                    onClick={() => applyTemplate('resume')}
+                    className="w-full flex items-center p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-charcoal/5 transition-all group text-left"
                   >
-                    📄 电子简历
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium text-charcoal/80 group-hover:text-charcoal">{t('editor.templates.resume')}</span>
                   </button>
+
                   <button
-                    className="w-full text-left text-sm p-2 hover:bg-slate-50 rounded text-slate-600 transition-colors"
-                    onClick={() => setAiPrompt("一个餐厅菜单页面，包含诱人的美食图片和价格列表。")}
+                    onClick={() => applyTemplate('menu')}
+                    className="w-full flex items-center p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-charcoal/5 transition-all group text-left"
                   >
-                    🍔 餐厅菜单
+                    <div className="w-8 h-8 rounded-lg bg-yellow-100 text-yellow-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                      <Utensils className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium text-charcoal/80 group-hover:text-charcoal">{t('editor.templates.menu')}</span>
                   </button>
                 </div>
               </div>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { AdminPanel } from './views/AdminPanel';
 import { User, HostedSite, ViewState } from './types';
 import { ConfirmModal } from './components/ConfirmModal';
 import { supabase, mapSiteFromDB, mapSiteToDB } from './lib/supabase';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 // Mock Data for Admin Simulation
 const MOCK_USERS: User[] = [
@@ -637,12 +638,16 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar
-        user={user}
-        onLogout={handleLogout}
-        onNavigate={navigateTo}
-        onLoginClick={() => setIsAuthOpen(true)}
-      />
+      {view !== 'EDITOR' && (
+        <Navbar
+          isLoggedIn={!!user}
+          onLogout={handleLogout}
+          onDashboard={() => navigateTo('dashboard')}
+          onLogin={() => setIsAuthOpen(true)}
+          onHome={() => navigateTo('landing')}
+          userEmail={user?.email}
+        />
+      )}
 
       {isSyncing && (
         <div className="fixed top-0 left-0 w-full h-1 bg-indigo-100 z-[100]">
@@ -712,4 +717,10 @@ function App() {
   );
 }
 
-export default App;
+export default function AppWrapper() {
+  return (
+    <LanguageProvider>
+      <App />
+    </LanguageProvider>
+  );
+}

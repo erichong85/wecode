@@ -1,0 +1,35 @@
+name: Deploy to Aliyun Server
+
+on:
+  push:
+    branches:
+      - main  # 推送到 main 分支时自动部署
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🚀 Deploy to Aliyun Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            cd /var/www/hostgenie
+            git pull origin main
+            npm install
+            npm run build
+            pm2 restart hostgenie
+            echo "✅ Deployment completed successfully!"
+            pm2 status
+
+      - name: 📊 Deployment Status
+        if: success()
+        run: |
+          echo "✅ Successfully deployed to production server"
+          echo "🌐 Website: https://xiyunai.cn"
