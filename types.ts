@@ -14,6 +14,7 @@ export interface HostedSite {
   userId: string;
   authorName: string;
   title: string;
+  description?: string; // Optional site description
   htmlContent: string;
   createdAt: number;
   updatedAt?: number;

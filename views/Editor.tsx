@@ -14,6 +14,7 @@ interface EditorProps {
 export const Editor: React.FC<EditorProps> = ({ initialSite, onSave, onCancel }) => {
   const { t } = useLanguage();
   const [title, setTitle] = useState(initialSite?.title || '');
+  const [description, setDescription] = useState(initialSite?.description || '');
   const [htmlContent, setHtmlContent] = useState(initialSite?.htmlContent || '');
   const [isPublic, setIsPublic] = useState(initialSite?.isPublic ?? true);
   const [allowSourceDownload, setAllowSourceDownload] = useState(initialSite?.allowSourceDownload ?? true);
@@ -64,7 +65,9 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, onSave, onCancel })
     await onSave({
       id: initialSite?.id,
       title,
+      description,
       htmlContent,
+      published: true,
       isPublic,
       allowSourceDownload
     });
@@ -228,6 +231,19 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, onSave, onCancel })
                       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${allowSourceDownload ? 'left-5' : 'left-1'}`}></div>
                     </div>
                   </label>
+
+                  <div className="border-t border-charcoal/5 pt-4">
+                    <label className="block">
+                      <span className="text-xs font-bold text-charcoal/60 uppercase tracking-wider mb-2 block">{t('editor.description')}</span>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder={t('editor.descriptionPlaceholder')}
+                        className="w-full px-3 py-2 text-sm border border-charcoal/10 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        rows={3}
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
             )}

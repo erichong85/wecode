@@ -41,6 +41,8 @@ export const en = {
     editor: {
         title: 'Editor',
         siteTitle: 'Site Title',
+        description: 'Site Description',
+        descriptionPlaceholder: 'Briefly describe your site (optional)',
         htmlContent: 'HTML Content',
         preview: 'Preview',
         settings: 'Settings',

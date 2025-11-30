@@ -50,7 +50,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ sites, onCreateNew, onView
             <div key={site.id} className="group bg-white rounded-xl overflow-hidden border border-charcoal/10 transition-all hover:shadow-md hover:-translate-y-0.5">
               {/* Preview Area - Clickable */}
               <div
-                className="aspect-[16/10] bg-slate-50 relative border-b border-charcoal/5 cursor-pointer group-hover:opacity-95 transition-opacity"
+                className="aspect-[4/3] bg-slate-50 relative border-b border-charcoal/5 cursor-pointer group-hover:opacity-95 transition-opacity"
                 onClick={() => onEditSite(site)}
               >
                 {site.htmlContent ? (

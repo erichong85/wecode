@@ -41,6 +41,8 @@ export const zh = {
     editor: {
         title: '编辑器',
         siteTitle: '网站标题',
+        description: '网站描述',
+        descriptionPlaceholder: '简要描述您的网站（可选）',
         htmlContent: 'HTML 内容',
         preview: '预览',
         settings: '设置',
