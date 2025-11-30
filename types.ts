@@ -18,9 +18,25 @@ export interface HostedSite {
   createdAt: number;
   updatedAt?: number;
   views: number;
+  likes: number;
+  favorites: number;
   published: boolean;
   isPublic: boolean; // Controls visibility on Landing Page
   allowSourceDownload: boolean; // Controls if source code can be downloaded
+}
+
+export interface UserLike {
+  id: string;
+  userId: string;
+  siteId: string;
+  createdAt: number;
+}
+
+export interface UserFavorite {
+  id: string;
+  userId: string;
+  siteId: string;
+  createdAt: number;
 }
 
 export enum AuthMethod {

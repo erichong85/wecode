@@ -42,6 +42,8 @@ const MOCK_SITES: HostedSite[] = [
     htmlContent: '<!DOCTYPE html><html><body style="text-align:center; padding: 50px; background: #1a1a1a; color: white;"><h1>摄影作品展示</h1><p>欢迎来到我的光影世界</p><!-- HostGenie Footer --><footer style="display: block; width: 100%; padding: 24px 0; margin-top: 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-family: sans-serif; color: #64748b; font-size: 14px;"><p style="margin: 0 0 8px 0;">托管于 <a href="#" style="color: #4f46e5; text-decoration: none; font-weight: bold;">HostGenie</a></p><p style="margin: 0;">技术支持微信：<span style="color: #334155; font-weight: 500;">35808387</span></p></footer></body></html>',
     createdAt: Date.now() - 86400000 * 5,
     views: 1240,
+    likes: 89,
+    favorites: 45,
     published: true,
     isPublic: true,
     allowSourceDownload: true
@@ -54,6 +56,8 @@ const MOCK_SITES: HostedSite[] = [
     htmlContent: '<!DOCTYPE html><html><body style="text-align:center; padding: 50px; color: #333;"><h1>Modern UI Kit</h1><p>最优雅的 React 组件库</p><!-- HostGenie Footer --><footer style="display: block; width: 100%; padding: 24px 0; margin-top: 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-family: sans-serif; color: #64748b; font-size: 14px;"><p style="margin: 0 0 8px 0;">托管于 <a href="#" style="color: #4f46e5; text-decoration: none; font-weight: bold;">HostGenie</a></p><p style="margin: 0;">技术支持微信：<span style="color: #334155; font-weight: 500;">35808387</span></p></footer></body></html>',
     createdAt: Date.now() - 86400000 * 2,
     views: 856,
+    likes: 64,
+    favorites: 32,
     published: true,
     isPublic: true,
     allowSourceDownload: false
@@ -72,6 +76,10 @@ function App() {
 
   const [currentSite, setCurrentSite] = useState<HostedSite | null>(null);
   const [editingSite, setEditingSite] = useState<HostedSite | null>(null);
+
+  // User interaction state
+  const [userLikes, setUserLikes] = useState<string[]>([]); // site IDs user has liked
+  const [userFavorites, setUserFavorites] = useState<string[]>([]); // site IDs user has favorited
 
   // Delete Modal State
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -200,6 +208,45 @@ function App() {
     setIsSyncing(false);
   };
 
+  // Load user's likes and favorites
+  const loadUserInteractions = async () => {
+    if (!supabase || !user) return;
+
+    try {
+      // Load user likes
+      const { data: likes } = await supabase
+        .from('user_likes')
+        .select('site_id')
+        .eq('user_id', user.id);
+
+      if (likes) {
+        setUserLikes(likes.map((l: any) => l.site_id));
+      }
+
+      // Load user favorites
+      const { data: favorites } = await supabase
+        .from('user_favorites')
+        .select('site_id')
+        .eq('user_id', user.id);
+
+      if (favorites) {
+        setUserFavorites(favorites.map((f: any) => f.site_id));
+      }
+    } catch (error) {
+      console.error('Failed to load user interactions:', error);
+    }
+  };
+
+  // Load user interactions when user logs in
+  useEffect(() => {
+    if (user && hasRealBackend) {
+      loadUserInteractions();
+    } else {
+      setUserLikes([]);
+      setUserFavorites([]);
+    }
+  }, [user]);
+
   // 3. Sync to LocalStorage (Only if no backend)
   useEffect(() => {
     if (!hasRealBackend && allSites.length > 0) {
@@ -304,6 +351,8 @@ function App() {
       createdAt: Date.now(),
       updatedAt: Date.now(),
       views: 0,
+      likes: 0,
+      favorites: 0,
       published: true,
       isPublic: data.isPublic,
       allowSourceDownload: data.allowSourceDownload
@@ -363,15 +412,98 @@ function App() {
   };
 
   // View Routing
-  const handleViewSite = (site: HostedSite) => {
+  const handleViewSite = async (site: HostedSite) => {
     setCurrentSite(site);
     setView('VIEWER');
     window.location.hash = `site/${site.id}`;
+
+    // Increment views count
+    if (hasRealBackend && supabase) {
+      await supabase
+        .from('sites')
+        .update({ views: site.views + 1 })
+        .eq('id', site.id);
+      // Refresh sites to get updated count
+      await loadSitesFromSupabase();
+    } else {
+      // Local storage fallback
+      setAllSites(allSites.map(s =>
+        s.id === site.id ? { ...s, views: s.views + 1 } : s
+      ));
+    }
   };
 
   const handleEditSite = (site: HostedSite) => {
     setEditingSite(site);
     setView('EDITOR');
+  };
+
+  // Like functionality
+  const handleLikeSite = async (siteId: string) => {
+    if (!user || !hasRealBackend || !supabase) return;
+
+    try {
+      // Check if user already liked
+      const { data: existing } = await supabase
+        .from('user_likes')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('site_id', siteId)
+        .single();
+
+      if (existing) {
+        // Unlike - remove from user_likes and decrement count
+        await supabase.from('user_likes').delete().eq('id', existing.id);
+        await supabase.rpc('decrement_likes', { site_id: siteId });
+      } else {
+        // Like - add to user_likes and increment count
+        await supabase.from('user_likes').insert({
+          user_id: user.id,
+          site_id: siteId,
+          created_at: Date.now()
+        });
+        await supabase.rpc('increment_likes', { site_id: siteId });
+      }
+
+      // Refresh sites
+      await loadSitesFromSupabase();
+    } catch (error) {
+      console.error('Like error:', error);
+    }
+  };
+
+  // Favorite functionality
+  const handleFavoriteSite = async (siteId: string) => {
+    if (!user || !hasRealBackend || !supabase) return;
+
+    try {
+      // Check if user already favorited
+      const { data: existing } = await supabase
+        .from('user_favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('site_id', siteId)
+        .single();
+
+      if (existing) {
+        // Unfavorite - remove from user_favorites and decrement count
+        await supabase.from('user_favorites').delete().eq('id', existing.id);
+        await supabase.rpc('decrement_favorites', { site_id: siteId });
+      } else {
+        // Favorite - add to user_favorites and increment count
+        await supabase.from('user_favorites').insert({
+          user_id: user.id,
+          site_id: siteId,
+          created_at: Date.now()
+        });
+        await supabase.rpc('increment_favorites', { site_id: siteId });
+      }
+
+      // Refresh sites
+      await loadSitesFromSupabase();
+    } catch (error) {
+      console.error('Favorite error:', error);
+    }
   };
 
   // Check URL Hash for Deep Linking (Preview Mode)
@@ -409,14 +541,22 @@ function App() {
   };
 
   if (view === 'VIEWER' && currentSite) {
-    return <Viewer site={currentSite} onBack={() => {
-      if (user) {
-        setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
-      } else {
-        setView('LANDING');
-      }
-      window.history.pushState(null, document.title, window.location.pathname + window.location.search);
-    }} />;
+    return <Viewer
+      site={currentSite}
+      user={user}
+      onBack={() => {
+        if (user) {
+          setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
+        } else {
+          setView('LANDING');
+        }
+        window.history.pushState(null, document.title, window.location.pathname + window.location.search);
+      }}
+      onLike={handleLikeSite}
+      onFavorite={handleFavoriteSite}
+      isLiked={userLikes.includes(currentSite.id)}
+      isFavorited={userFavorites.includes(currentSite.id)}
+    />;
   }
 
   return (

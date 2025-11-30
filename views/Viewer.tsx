@@ -1,15 +1,28 @@
 
-import React, { useState } from 'react';
-import { Share2, ArrowLeft, Copy, Check, Download, X, Globe } from 'lucide-react';
-import { HostedSite } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Share2, ArrowLeft, Copy, Check, Download, X, Globe, Heart, Bookmark, Eye } from 'lucide-react';
+import { HostedSite, User } from '../types';
 import { Button } from '../components/Button';
 
 interface ViewerProps {
   site: HostedSite;
+  user: User | null;
   onBack: () => void;
+  onLike?: (siteId: string) => void;
+  onFavorite?: (siteId: string) => void;
+  isLiked?: boolean;
+  isFavorited?: boolean;
 }
 
-export const Viewer: React.FC<ViewerProps> = ({ site, onBack }) => {
+export const Viewer: React.FC<ViewerProps> = ({
+  site,
+  user,
+  onBack,
+  onLike,
+  onFavorite,
+  isLiked = false,
+  isFavorited = false
+}) => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -75,8 +88,50 @@ export const Viewer: React.FC<ViewerProps> = ({ site, onBack }) => {
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Stats Display */}
+          <div className="hidden md:flex items-center space-x-4 text-xs text-slate-400 mr-2">
+            <div className="flex items-center">
+              <Eye className="w-4 h-4 mr-1" />
+              {site.views}
+            </div>
+            <div className="flex items-center">
+              <Heart className="w-4 h-4 mr-1" />
+              {site.likes}
+            </div>
+            <div className="flex items-center">
+              <Bookmark className="w-4 h-4 mr-1" />
+              {site.favorites}
+            </div>
+          </div>
+
+          {/* Like Button */}
+          {user && onLike && (
+            <Button
+              variant={isLiked ? "primary" : "outline"}
+              size="sm"
+              onClick={() => onLike(site.id)}
+              className={isLiked ? "bg-red-600 hover:bg-red-700 border-red-600" : "text-slate-300 border-slate-600 hover:bg-slate-700"}
+            >
+              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+              <span className="ml-1 hidden sm:inline">{isLiked ? '已赞' : '点赞'}</span>
+            </Button>
+          )}
+
+          {/* Favorite Button */}
+          {user && onFavorite && (
+            <Button
+              variant={isFavorited ? "primary" : "outline"}
+              size="sm"
+              onClick={() => onFavorite(site.id)}
+              className={isFavorited ? "bg-yellow-600 hover:bg-yellow-700 border-yellow-600" : "text-slate-300 border-slate-600 hover:bg-slate-700"}
+            >
+              <Bookmark className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
+              <span className="ml-1 hidden sm:inline">{isFavorited ? '已收藏' : '收藏'}</span>
+            </Button>
+          )}
+
           {site.allowSourceDownload && (
-            <Button variant="outline" size="sm" onClick={handleDownloadSource} className="text-slate-300 border-slate-600 hover:bg-slate-700 hidden sm:inline-flex">
+            <Button variant="outline" size="sm" onClick={handleDownloadSource} className="text-slate-300 border-slate-600 hover:bg-slate-700 hidden lg:inline-flex">
               <Download className="w-4 h-4 mr-2" />
               源码
             </Button>
@@ -84,7 +139,7 @@ export const Viewer: React.FC<ViewerProps> = ({ site, onBack }) => {
 
           <Button variant="primary" size="sm" onClick={() => setShowShareModal(true)}>
             <Share2 className="w-4 h-4 mr-2" />
-            分享 / 二维码
+            分享
           </Button>
         </div>
       </div>
