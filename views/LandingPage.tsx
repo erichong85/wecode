@@ -26,10 +26,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, publicSi
                   </span>
                 </div>
                 <div className="mt-6">
-                  <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900">
                     即时、智能的网页托管服务。
                   </h2>
-                  <p className="mt-4 text-lg text-slate-500">
+                  <p className="mt-4 text-base sm:text-lg text-slate-500">
                     上传 HTML 文件或让 AI 为你构建网站。即刻获得访问链接和二维码。无需配置服务器。
                   </p>
                   <div className="mt-6">
@@ -40,10 +40,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, publicSi
                 </div>
               </div>
             </div>
-            <div className="mt-12 sm:mt-16 lg:mt-0">
-              <div className="pl-4 -mr-48 sm:pl-6 md:-mr-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
+            <div className="mt-12 sm:mt-16 lg:mt-0 lg:pl-12">
+              <div className="relative mx-auto max-w-md px-4 sm:max-w-2xl sm:px-6 lg:max-w-none lg:px-0">
                 <img
-                  className="w-full rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 lg:absolute lg:left-0 lg:h-full lg:w-auto lg:max-w-none"
+                  className="w-full rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 lg:absolute lg:left-0 lg:h-full lg:w-auto lg:max-w-none object-cover"
                   src="/hero-preview.png"
                   alt="App interface preview"
                 />
@@ -61,29 +61,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, publicSi
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-6 bg-slate-50 rounded-lg border border-slate-100">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                <Upload className="w-6 h-6 text-blue-600" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="p-4 sm:p-6 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               </div>
-              <h3 className="text-lg font-medium text-slate-900 mb-2">轻松上传</h3>
-              <p className="text-slate-500">拖拽 HTML 文件或直接粘贴源代码到编辑器中。</p>
+              <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">轻松上传</h3>
+              <p className="text-sm sm:text-base text-slate-500">拖拽 HTML 文件或直接粘贴源代码到编辑器中。</p>
             </div>
 
-            <div className="p-6 bg-slate-50 rounded-lg border border-slate-100">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-purple-600" />
+            <div className="p-4 sm:p-6 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               </div>
-              <h3 className="text-lg font-medium text-slate-900 mb-2">AI 生成</h3>
-              <p className="text-slate-500">没有灵感？让 Gemini “创建一个作品集网页”，见证代码奇迹般生成。</p>
+              <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">AI 生成</h3>
+              <p className="text-sm sm:text-base text-slate-500">没有灵感？让 Gemini "创建一个作品集网页"，见证代码奇迹般生成。</p>
             </div>
 
-            <div className="p-6 bg-slate-50 rounded-lg border border-slate-100">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-green-600" />
+            <div className="p-4 sm:p-6 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
-              <h3 className="text-lg font-medium text-slate-900 mb-2">即时二维码</h3>
-              <p className="text-slate-500">每个网站都有唯一的链接和二维码。微信扫一扫即可访问。</p>
+              <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">即时二维码</h3>
+              <p className="text-sm sm:text-base text-slate-500">每个网站都有唯一的链接和二维码。微信扫一扫即可访问。</p>
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, publicSi
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {publicSites.slice(0, 6).map((site) => (
                 <div key={site.id} className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col group h-full">
                   {/* Preview Thumbnail */}

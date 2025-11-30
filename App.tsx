@@ -239,29 +239,47 @@ function App() {
     const footerStyles = `
       <style>
         html, body { min-height: 100%; margin: 0; }
-        body { display: flex; flex-direction: column; }
+        body { display: flex; flex-direction: column; padding-bottom: 60px; }
         #hg-footer { 
-          margin-top: auto;
-          padding: 10px 0;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 8px 12px;
           width: 100%;
           text-align: center;
-          font-size: 12px;
-          opacity: 0.6;
+          font-size: 11px;
+          line-height: 1.4;
           z-index: 9999;
-          background: transparent;
-          color: inherit; 
-          font-family: inherit;
+          background: rgba(248, 250, 252, 0.95);
+          backdrop-filter: blur(8px);
+          border-top: 1px solid rgba(226, 232, 240, 0.8);
+          color: #64748b;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+          box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
         }
         #hg-footer a {
-          color: inherit;
+          color: #4f46e5;
           text-decoration: none;
-          font-weight: bold;
+          font-weight: 600;
         }
         #hg-footer a:hover {
           text-decoration: underline;
         }
         #hg-footer p {
           margin: 2px 0;
+          display: inline;
+        }
+        #hg-footer p + p:before {
+          content: ' | ';
+          margin: 0 6px;
+          color: #cbd5e1;
+        }
+        @media (max-width: 640px) {
+          #hg-footer {
+            font-size: 10px;
+            padding: 6px 8px;
+          }
         }
       </style>
     `;
