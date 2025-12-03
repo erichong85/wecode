@@ -190,61 +190,61 @@ export const Viewer: React.FC<ViewerProps> = ({
 
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div className="inline-block align-middle bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-md w-full relative">
+            <div className="inline-block align-middle bg-white dark:bg-cyber-gray rounded-xl text-left overflow-hidden shadow-neo dark:shadow-[8px_8px_0px_0px_#FF00FF] border-4 border-charcoal dark:border-neon-pink transform transition-all sm:my-8 sm:max-w-md w-full relative">
               <button
                 onClick={() => setShowShareModal(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 focus:outline-none"
+                className="absolute top-4 right-4 text-charcoal dark:text-white hover:scale-110 transition-transform focus:outline-none bg-white dark:bg-cyber-black border-2 border-charcoal dark:border-neon-pink rounded-full p-1 shadow-neo-sm hover:shadow-none"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
 
-              <div className="bg-white px-6 pt-6 pb-4">
+              <div className="bg-white dark:bg-cyber-gray px-6 pt-8 pb-6">
                 <div className="text-center">
-                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 mb-4">
-                    <Share2 className="h-6 w-6 text-indigo-600" />
+                  <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-pop-yellow dark:bg-neon-yellow border-2 border-charcoal dark:border-cyber-black shadow-neo mb-6 animate-float-slow">
+                    <Share2 className="h-8 w-8 text-charcoal" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">分享你的网站</h3>
-                  <p className="text-sm text-slate-500 mb-6">
+                  <h3 className="text-2xl font-extrabold text-charcoal dark:text-white mb-2">分享你的网站</h3>
+                  <p className="text-sm text-charcoal/70 dark:text-white/70 mb-8 font-medium">
                     任何人都可以通过链接或扫描下方二维码访问此网站。
                   </p>
 
                   {/* QR Code */}
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 inline-block mb-6 relative group">
+                  <div className="bg-white dark:bg-cyber-black p-4 rounded-xl border-2 border-charcoal dark:border-neon-blue inline-block mb-8 relative group shadow-neo-sm">
                     <img
                       src={qrCodeUrl}
                       alt="Website QR Code"
-                      className="w-48 h-48 mix-blend-multiply mx-auto"
+                      className="w-48 h-48 mix-blend-multiply dark:mix-blend-normal dark:invert mx-auto"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 rounded-xl cursor-pointer" onClick={downloadQrCode}>
-                      <span className="bg-white shadow-sm px-3 py-1 rounded-full text-xs font-medium text-slate-700 flex items-center">
-                        <Download className="w-3 h-3 mr-1" /> 保存图片
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-charcoal/10 dark:bg-white/10 rounded-xl cursor-pointer backdrop-blur-sm" onClick={downloadQrCode}>
+                      <span className="bg-pop-green dark:bg-neon-green shadow-neo-sm border-2 border-charcoal px-4 py-2 rounded-full text-xs font-bold text-charcoal flex items-center hover:scale-105 transition-transform">
+                        <Download className="w-4 h-4 mr-1" /> 保存图片
                       </span>
                     </div>
                   </div>
 
                   {/* Link Copy */}
-                  <div className="bg-slate-100 rounded-lg p-3 flex items-center justify-between mb-4">
-                    <div className="flex items-center overflow-hidden mr-3">
-                      <Globe className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
-                      <span className="text-sm text-slate-600 truncate text-left">{shareUrl}</span>
+                  <div className="bg-white dark:bg-cyber-black rounded-xl border-2 border-charcoal dark:border-neon-purple p-2 flex items-center justify-between mb-6 shadow-neo-sm">
+                    <div className="flex items-center overflow-hidden mr-3 pl-2">
+                      <Globe className="w-4 h-4 text-charcoal/60 dark:text-neon-purple mr-2 flex-shrink-0" />
+                      <span className="text-sm font-bold text-charcoal dark:text-white truncate text-left">{shareUrl}</span>
                     </div>
-                    <Button variant="outline" size="sm" onClick={handleCopy} className="shadow-sm border border-slate-200 shrink-0">
-                      {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                    <Button variant="outline" size="sm" onClick={handleCopy} className="shadow-neo-sm hover:shadow-none border-2 border-charcoal dark:border-neon-purple shrink-0 bg-pop-purple dark:bg-neon-purple text-charcoal hover:translate-x-[1px] hover:translate-y-[1px]">
+                      {copied ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4 text-white" />}
                     </Button>
                   </div>
 
                   {/* Localhost Warning */}
                   {window.location.hostname === 'localhost' && (
-                    <div className="bg-yellow-50 border border-yellow-100 rounded-md p-3 text-left">
+                    <div className="bg-pop-yellow/20 border-2 border-charcoal dark:border-neon-yellow rounded-lg p-3 text-left mb-4">
                       <div className="flex">
                         <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <svg className="h-5 w-5 text-charcoal dark:text-neon-yellow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
                         </div>
                         <div className="ml-3">
-                          <h3 className="text-xs font-medium text-yellow-800">本地测试提示</h3>
-                          <div className="mt-1 text-xs text-yellow-700">
+                          <h3 className="text-xs font-bold text-charcoal dark:text-white">本地测试提示</h3>
+                          <div className="mt-1 text-xs text-charcoal/80 dark:text-white/80 font-medium">
                             <p>您当前在本地环境 (localhost)。手机直接扫码可能无法访问。请将 localhost 替换为电脑 IP，或将项目部署到服务器。</p>
                           </div>
                         </div>
@@ -254,8 +254,11 @@ export const Viewer: React.FC<ViewerProps> = ({
 
                 </div>
               </div>
-              <div className="bg-slate-50 px-4 py-3 sm:px-6 flex justify-center">
-                <Button variant="outline" onClick={() => setShowShareModal(false)} className="w-full sm:w-auto">
+              <div className="bg-charcoal/5 dark:bg-black/20 px-4 py-4 sm:px-6 flex justify-center border-t-2 border-charcoal dark:border-white/10">
+                <Button
+                  onClick={() => setShowShareModal(false)}
+                  className="w-full sm:w-auto bg-charcoal dark:bg-white text-white dark:text-charcoal border-2 border-charcoal dark:border-white shadow-neo hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold text-lg px-8 py-2 rounded-lg"
+                >
                   关闭
                 </Button>
               </div>
