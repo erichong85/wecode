@@ -18,11 +18,11 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = "inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg";
 
   const variants = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200',
-    secondary: 'bg-cream-100 text-charcoal hover:bg-cream-200 border border-charcoal/5',
-    outline: 'border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white',
-    ghost: 'bg-transparent text-charcoal hover:bg-charcoal/5',
-    danger: 'bg-red-500 text-white hover:bg-red-600',
+    primary: 'bg-pop-yellow text-charcoal border-2 border-charcoal shadow-neo hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all',
+    secondary: 'bg-white text-charcoal border-2 border-charcoal shadow-neo hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all',
+    outline: 'bg-transparent border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white transition-all active:scale-95',
+    ghost: 'bg-transparent text-charcoal hover:bg-pop-purple/20 hover:underline decoration-2 underline-offset-4 transition-all active:scale-95',
+    danger: 'bg-red-500 text-white border-2 border-charcoal shadow-neo hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all',
   };
 
   const sizes = {

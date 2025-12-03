@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-[#322f2e]`}>{children}</body>
+      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-white`}>{children}</body>
     </html>
   )
 }

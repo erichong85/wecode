@@ -18,6 +18,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Reset state when opening
   useEffect(() => {
@@ -25,6 +26,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
       setMethod(AuthMethod.EMAIL);
       setIsSignUp(false);
       setLoading(false);
+      setErrorMsg(null);
       setEmail('');
       setPassword('');
     }
@@ -37,6 +39,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
       return;
     }
     setLoading(true);
+    setErrorMsg(null);
 
     try {
       if (isReset) {
@@ -76,7 +79,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
         }
       }
     } catch (err: any) {
-      console.error('Auth Error:', err);
+      // console.error('Auth Error:', err);
       // Try to get the message from various possible properties
       const rawMsg = err.message || err.error_description || (typeof err === 'string' ? err : JSON.stringify(err));
 
@@ -86,7 +89,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
       else if (rawMsg.includes('Password should be at least 6 characters')) displayMsg = '密码长度至少需要6位';
 
       // Force alert
-      window.alert(displayMsg);
+      // window.alert(displayMsg);
+      setErrorMsg(displayMsg);
     } finally {
       setLoading(false);
     }
@@ -138,6 +142,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
                   {/* Email Form */}
                   {method === AuthMethod.EMAIL && (
                     <form onSubmit={handleEmailAuth} className="space-y-4">
+                      {errorMsg && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm flex items-start">
+                          <CheckCircle className="w-4 h-4 mr-2 mt-0.5 shrink-0 text-red-500 rotate-45" />
+                          <span>{errorMsg}</span>
+                        </div>
+                      )}
                       <div>
                         <label className="block text-sm font-medium text-slate-700">邮箱地址</label>
                         <input

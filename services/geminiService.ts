@@ -21,10 +21,10 @@ const getModel = () => {
   return process.env.NEXT_PUBLIC_AI_MODEL || "gpt-3.5-turbo";
 };
 
-export const generateHtmlCode = async (prompt: string): Promise<string> => {
+export const generateHtmlCode = async (prompt: string, modelOverride?: string): Promise<string> => {
   const apiKeys = getApiKeys();
   const baseUrl = getBaseUrl();
-  const model = getModel();
+  const model = modelOverride || getModel();
 
   let lastError = null;
 

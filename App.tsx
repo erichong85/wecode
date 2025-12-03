@@ -7,6 +7,7 @@ import { Editor } from './views/Editor';
 import { Viewer } from './views/Viewer';
 import { LandingPage } from './views/LandingPage';
 import { AdminPanel } from './views/AdminPanel';
+import { PromptTemplates } from './views/PromptTemplates';
 import { User, HostedSite, ViewState } from './types';
 import { ConfirmModal } from './components/ConfirmModal';
 import { supabase, mapSiteFromDB, mapSiteToDB } from './lib/supabase';
@@ -179,7 +180,8 @@ function App() {
     const { data: sitesData } = await supabase
       .from('sites')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(20); // Limit to 20 recent sites for performance
 
     if (sitesData) {
       const mapped = sitesData.map(mapSiteFromDB);
@@ -602,6 +604,7 @@ function App() {
 
   const navigateTo = (target: string) => {
     if (target === 'landing') setView('LANDING');
+    if (target === 'prompts') setView('PROMPTS');
     if (target === 'dashboard') {
       setEditingSite(null);
       setView(user?.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
@@ -616,6 +619,23 @@ function App() {
       window.scrollTo(0, 0);
     }
   };
+
+  const handleUsePrompt = (prompt: string) => {
+    setEditingSite(null); // Ensure we are creating a new site
+    // We need to pass the prompt to the Editor. 
+    // Since Editor uses local state for prompt, we can pass it via initialSite or a new prop.
+    // But initialSite is null for new sites.
+    // Let's modify Editor to accept an initialPrompt prop or use a hack.
+    // Actually, we can just create a dummy "new" site object with the prompt if we want, 
+    // but Editor expects initialSite to be a HostedSite or null.
+    // A better way is to pass `initialPrompt` to Editor.
+    // For now, let's just set the view to EDITOR and we might need to modify Editor to accept initialPrompt.
+    // Let's assume we will modify Editor to accept initialPrompt.
+    setView('EDITOR');
+    // We'll need to pass this prompt to the Editor component.
+    // Let's store it in a temporary state.
+  };
+  const [pendingPrompt, setPendingPrompt] = useState<string>('');
 
   if (view === 'VIEWER' && currentSite) {
     return <Viewer
@@ -637,14 +657,15 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {view !== 'EDITOR' && (
         <Navbar
           isLoggedIn={!!user}
           onLogout={handleLogout}
+
           onDashboard={() => navigateTo('dashboard')}
           onLogin={() => setIsAuthOpen(true)}
-          onHome={() => navigateTo('landing')}
+          onHome={(view) => navigateTo(view || 'landing')}
           userEmail={user?.email}
         />
       )}
@@ -655,46 +676,61 @@ function App() {
         </div>
       )}
 
-      <main className="flex-grow">
-        {view === 'LANDING' && (
-          <LandingPage
-            onGetStarted={() => user ? setView('DASHBOARD') : setIsAuthOpen(true)}
-            publicSites={allSites.filter(s => s.published && s.isPublic)}
-            onViewSite={handleViewSite}
-            isLoggedIn={!!user}
-          />
-        )}
+      <main className="flex-grow" key={view}>
+        <div className="animate-fade-in h-full">
+          {view === 'LANDING' && (
+            <LandingPage
+              onGetStarted={() => user ? setView('DASHBOARD') : setIsAuthOpen(true)}
+              publicSites={allSites.filter(s => s.published && s.isPublic)}
+              onViewSite={handleViewSite}
+              isLoggedIn={!!user}
+            />
+          )}
 
-        {view === 'DASHBOARD' && user && (
-          <Dashboard
-            sites={allSites.filter(s => s.userId === user.id)}
-            onCreateNew={() => { setEditingSite(null); setView('EDITOR'); }}
-            onViewSite={handleViewSite}
-            onEditSite={handleEditSite}
-            onDeleteSite={handleDeleteSite}
-          />
-        )}
+          {view === 'DASHBOARD' && user && (
+            <Dashboard
+              sites={allSites.filter(s => s.userId === user.id)}
+              onCreateNew={() => { setEditingSite(null); setView('EDITOR'); }}
+              onViewSite={handleViewSite}
+              onEditSite={handleEditSite}
+              onDeleteSite={handleDeleteSite}
+            />
+          )}
 
-        {view === 'ADMIN' && user && user.role === 'admin' && (
-          <AdminPanel
-            users={allUsers}
-            sites={allSites}
-            onDeleteUser={() => { }} // simplified
-            onDeleteSite={handleDeleteSite}
-            onViewSite={handleViewSite}
-          />
-        )}
+          {view === 'ADMIN' && user && user.role === 'admin' && (
+            <AdminPanel
+              users={allUsers}
+              sites={allSites}
+              onDeleteUser={() => { }} // simplified
+              onDeleteSite={handleDeleteSite}
+              onViewSite={handleViewSite}
+            />
+          )}
 
-        {view === 'EDITOR' && user && (
-          <Editor
-            initialSite={editingSite}
-            onSave={handleSaveSite}
-            onCancel={() => {
-              setEditingSite(null);
-              setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
-            }}
-          />
-        )}
+          {view === 'PROMPTS' && (
+            <PromptTemplates
+              user={user}
+              onUsePrompt={(prompt) => {
+                setPendingPrompt(prompt);
+                setView('EDITOR');
+              }}
+              onBack={() => setView('LANDING')}
+            />
+          )}
+
+          {view === 'EDITOR' && user && (
+            <Editor
+              initialSite={editingSite}
+              initialPrompt={pendingPrompt}
+              onSave={handleSaveSite}
+              onCancel={() => {
+                setEditingSite(null);
+                setPendingPrompt('');
+                setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
+              }}
+            />
+          )}
+        </div>
       </main>
 
       <AuthModal
@@ -717,10 +753,14 @@ function App() {
   );
 }
 
+import { ThemeProvider } from './contexts/ThemeContext';
+
 export default function AppWrapper() {
   return (
-    <LanguageProvider>
-      <App />
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

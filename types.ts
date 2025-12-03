@@ -45,4 +45,14 @@ export enum AuthMethod {
   WECHAT = 'WECHAT'
 }
 
-export type ViewState = 'LANDING' | 'DASHBOARD' | 'EDITOR' | 'VIEWER' | 'ADMIN';
+export interface PromptTemplate {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  author?: string;
+  isSystem?: boolean;
+}
+
+export type ViewState = 'LANDING' | 'DASHBOARD' | 'EDITOR' | 'VIEWER' | 'ADMIN' | 'PROMPTS';

@@ -2,8 +2,8 @@
   "[project]/App.tsx [app-client] (ecmascript, next/dynamic entry)": {
     "id": "[project]/App.tsx [app-client] (ecmascript, next/dynamic entry)",
     "files": [
-      "static/chunks/_919c7619._.js",
-      "static/chunks/node_modules_ccb6a335._.js",
+      "static/chunks/_a9634e56._.js",
+      "static/chunks/node_modules_e0c49223._.js",
       "static/chunks/App_tsx_cc2505b5._.js"
     ]
   }

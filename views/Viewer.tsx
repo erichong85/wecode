@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Share2, ArrowLeft, Copy, Check, Download, X, Globe, Heart, Bookmark, Eye } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { HostedSite, User } from '../types';
 import { Button } from '../components/Button';
 
@@ -72,24 +73,30 @@ export const Viewer: React.FC<ViewerProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900">
+    <div className="flex flex-col h-screen bg-white dark:bg-cyber-black transition-colors duration-300">
       {/* Viewer Header */}
-      <div className="bg-slate-800 text-white px-4 py-3 flex items-center justify-between shadow-lg z-10">
+      <div className="bg-white dark:bg-cyber-black text-charcoal dark:text-white px-4 py-3 flex items-center justify-between border-b-4 border-charcoal dark:border-neon-blue z-10 transition-colors duration-300">
         <div className="flex items-center">
-          <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-300 hover:text-white hover:bg-slate-700 mr-4">
-            <ArrowLeft className="w-5 h-5" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="mr-4 border-2 border-charcoal dark:border-neon-pink shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold bg-white dark:bg-cyber-gray text-charcoal dark:text-neon-pink hover:bg-pop-purple/20 dark:hover:bg-neon-pink/20"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            返回
           </Button>
           <div>
-            <h2 className="font-semibold text-sm sm:text-base">{site.title}</h2>
-            <div className="flex items-center text-xs text-slate-400">
-              <span className="truncate max-w-[150px] sm:max-w-md mr-2">{shareUrl}</span>
+            <h2 className="font-bold text-lg text-charcoal dark:text-white">{site.title}</h2>
+            <div className="flex items-center text-xs text-charcoal/60 dark:text-white/60">
+              <span className="truncate max-w-[150px] sm:max-w-md mr-2 font-mono">{shareUrl}</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center space-x-2">
           {/* Stats Display */}
-          <div className="hidden md:flex items-center space-x-4 text-xs text-slate-400 mr-2">
+          <div className="hidden md:flex items-center space-x-4 text-xs text-charcoal/60 dark:text-white/60 mr-2 font-bold">
             <div className="flex items-center">
               <Eye className="w-4 h-4 mr-1" />
               {site.views}
@@ -107,12 +114,20 @@ export const Viewer: React.FC<ViewerProps> = ({
           {/* Like Button */}
           {user && onLike && (
             <Button
-              variant={isLiked ? "primary" : "outline"}
+              variant={isLiked ? "danger" : "secondary"}
               size="sm"
-              onClick={() => onLike(site.id)}
-              className={isLiked
-                ? "bg-red-600 hover:bg-red-700 border-red-600 text-white"
-                : "bg-slate-700 text-white border-slate-600 hover:bg-slate-600"}
+              onClick={() => {
+                if (!isLiked) {
+                  confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#FFD700', '#87CEEB', '#FFB6C1', '#90EE90', '#E6E6FA']
+                  });
+                }
+                onLike(site.id);
+              }}
+              className={`border-2 border-charcoal dark:border-neon-pink shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold ${isLiked ? 'bg-pop-pink dark:bg-neon-pink text-charcoal' : 'bg-white dark:bg-cyber-gray text-charcoal dark:text-neon-pink hover:bg-pop-pink/20 dark:hover:bg-neon-pink/20'}`}
             >
               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
               <span className="ml-1 hidden sm:inline">{isLiked ? '已赞' : '点赞'}</span>
@@ -122,12 +137,10 @@ export const Viewer: React.FC<ViewerProps> = ({
           {/* Favorite Button */}
           {user && onFavorite && (
             <Button
-              variant={isFavorited ? "primary" : "outline"}
+              variant={isFavorited ? "primary" : "secondary"}
               size="sm"
               onClick={() => onFavorite(site.id)}
-              className={isFavorited
-                ? "bg-yellow-600 hover:bg-yellow-700 border-yellow-600 text-white"
-                : "bg-slate-700 text-white border-slate-600 hover:bg-slate-600"}
+              className={`border-2 border-charcoal dark:border-neon-blue shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold ${isFavorited ? 'bg-pop-blue dark:bg-neon-blue text-charcoal' : 'bg-white dark:bg-cyber-gray text-charcoal dark:text-neon-blue hover:bg-pop-blue/20 dark:hover:bg-neon-blue/20'}`}
             >
               <Bookmark className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
               <span className="ml-1 hidden sm:inline">{isFavorited ? '已收藏' : '收藏'}</span>
@@ -135,13 +148,23 @@ export const Viewer: React.FC<ViewerProps> = ({
           )}
 
           {site.allowSourceDownload && (
-            <Button variant="outline" size="sm" onClick={handleDownloadSource} className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600 hidden lg:inline-flex">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleDownloadSource}
+              className="hidden lg:inline-flex border-2 border-charcoal dark:border-neon-green shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold bg-pop-green dark:bg-neon-green text-charcoal hover:bg-pop-green/90 dark:hover:bg-neon-green/90"
+            >
               <Download className="w-4 h-4 mr-2" />
               源码
             </Button>
           )}
 
-          <Button variant="primary" size="sm" onClick={() => setShowShareModal(true)}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowShareModal(true)}
+            className="border-2 border-charcoal dark:border-neon-yellow shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold bg-pop-yellow dark:bg-neon-yellow text-charcoal hover:bg-pop-yellow/90 dark:hover:bg-neon-yellow/90"
+          >
             <Share2 className="w-4 h-4 mr-2" />
             分享
           </Button>

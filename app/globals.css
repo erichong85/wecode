@@ -1,4 +1,66 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom Pop Scrollbar */
+::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+}
+
+::-webkit-scrollbar-track {
+    background: #ffffff;
+    border-left: 2px solid #000000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #FFD700;
+    /* Pop Yellow */
+    border: 2px solid #000000;
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #facc15;
+}
+
+::-webkit-scrollbar-corner {
+    background: #ffffff;
+}
+
+/* Dot Pattern */
+.bg-dot-pattern {
+    background-image: radial-gradient(#000000 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.1;
+}
+
+.dark .bg-dot-pattern {
+    background-image: radial-gradient(#ffffff 1px, transparent 1px);
+    opacity: 0.1;
+}
+
+/* Floating Animation */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.animate-float-slow {
+    animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-medium {
+    animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-fast {
+    animation: float 3s ease-in-out infinite;
+}
