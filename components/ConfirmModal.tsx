@@ -4,7 +4,7 @@ import { Button } from './Button';
 
 interface ConfirmModalProps {
     isOpen: boolean;
-    onClose: () => void;
+    onCancel: () => void;
     onConfirm: () => void;
     title: string;
     message: string;
@@ -16,7 +16,7 @@ interface ConfirmModalProps {
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     isOpen,
-    onClose,
+    onCancel,
     onConfirm,
     title,
     message,
@@ -41,7 +41,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                         <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
                     </div>
                     <button
-                        onClick={onClose}
+                        onClick={onCancel}
                         className="text-slate-400 hover:text-slate-600 transition-colors"
                     >
                         <X className="w-5 h-5" />
@@ -59,7 +59,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end space-x-3">
                     <Button
                         variant="ghost"
-                        onClick={onClose}
+                        onClick={onCancel}
                         disabled={isLoading}
                     >
                         {cancelText}

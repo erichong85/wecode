@@ -7,12 +7,11 @@ import { Button } from '../components/Button';
 interface AdminPanelProps {
   users: User[];
   sites: HostedSite[];
-  onDeleteUser: (userId: string) => void;
+  onEditSite: (site: HostedSite) => void;
   onDeleteSite: (siteId: string) => void;
-  onViewSite: (site: HostedSite) => void;
 }
 
-export const AdminPanel: React.FC<AdminPanelProps> = ({ users, sites, onDeleteUser, onDeleteSite, onViewSite }) => {
+export const AdminPanel: React.FC<AdminPanelProps> = ({ users, sites, onEditSite, onDeleteSite }) => {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'USERS' | 'SITES'>('OVERVIEW');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -197,11 +196,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ users, sites, onDeleteUs
                         {formatDate(user.lastLoginAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {user.role !== 'admin' && (
-                          <button onClick={() => onDeleteUser(user.id)} className="text-red-600 hover:text-red-900">
-                            删除
-                          </button>
-                        )}
+                        {/* onDeleteUser not implemented in App.tsx */}
                       </td>
                     </tr>
                   ))}
@@ -252,8 +247,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ users, sites, onDeleteUs
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                        <button onClick={() => onViewSite(site)} className="text-indigo-600 hover:text-indigo-900">
-                          预览
+                        <button onClick={() => onEditSite(site)} className="text-indigo-600 hover:text-indigo-900">
+                          编辑
                         </button>
                         <button onClick={() => onDeleteSite(site.id)} className="text-red-600 hover:text-red-900">
                           下架

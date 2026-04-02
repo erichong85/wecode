@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
     // 生产环境优化
-    output: 'standalone', // 启用 standalone 模式，减小部署体积
+    // output: 'standalone', // 已注释掉：在常规（非 Docker）服务器上不使用 standalone 模式以便支持 npm start
 
     // 图片优化
     images: {

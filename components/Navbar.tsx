@@ -5,15 +5,15 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface NavbarProps {
-  isLoggedIn: boolean;
+  user: User | null;
+  currentView: string;
+  onViewChange: (view: any) => void;
   onLogout: () => void;
-  onDashboard: () => void;
   onLogin: () => void;
-  onHome: (view?: string) => void;
-  userEmail?: string;
+  onNewSite: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, onLogout, onDashboard, onLogin, onHome, userEmail }) => {
+export const Navbar: React.FC<NavbarProps> = ({ user, currentView, onViewChange, onLogout, onLogin, onNewSite }) => {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
@@ -26,7 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, onLogout, onDashboar
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
-          <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => onHome()}>
+          <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => onViewChange('LANDING')}>
             <img src="/images/logo.svg" alt="HostGenie Logo" className="h-10 w-10 mr-3 object-contain" />
             <span className="font-serif text-2xl font-bold text-charcoal dark:text-white tracking-tight">
               Host<span className="italic text-pop-yellow dark:text-neon-yellow">Genie</span>
@@ -55,23 +55,23 @@ export const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, onLogout, onDashboar
               {language === 'zh' ? 'EN' : '中'}
             </button>
 
-            {isLoggedIn ? (
+            {user ? (
               <>
                 <button
-                  onClick={onDashboard}
-                  className="px-4 py-2 text-sm font-bold border-2 border-charcoal rounded-lg bg-pop-yellow text-charcoal shadow-neo-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                  onClick={() => onViewChange('DASHBOARD')}
+                  className={`px-4 py-2 text-sm font-bold border-2 border-charcoal rounded-lg shadow-neo-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all ${currentView === 'DASHBOARD' ? 'bg-pop-yellow text-charcoal' : 'bg-white text-charcoal'}`}
                 >
                   {t('common.dashboard')}
                 </button>
                 <button
-                  onClick={() => onHome && onHome('prompts')}
-                  className="px-4 py-2 text-sm font-bold border-2 border-charcoal rounded-lg bg-pop-blue text-charcoal shadow-neo-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                  onClick={() => onViewChange('PROMPTS')}
+                  className={`px-4 py-2 text-sm font-bold border-2 border-charcoal rounded-lg shadow-neo-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all ${currentView === 'PROMPTS' ? 'bg-pop-blue text-charcoal' : 'bg-white text-charcoal'}`}
                 >
                   {t('prompts.title')}
                 </button>
                 <div className="flex items-center space-x-3 ml-2 pl-2 border-l-2 border-charcoal/20">
                   <span className="px-3 py-1.5 text-xs font-bold border-2 border-charcoal rounded-md bg-white text-charcoal shadow-neo-sm">
-                    {userEmail?.split('@')[0]}
+                    {user.name || user.email?.split('@')[0]}
                   </span>
                   <Button
                     variant="ghost"

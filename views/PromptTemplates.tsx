@@ -87,7 +87,7 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
                 .order('created_at', { ascending: false });
 
             if (data) {
-                const dbPrompts: PromptTemplate[] = data.map((p: any) => ({
+                const dbPrompts: PromptTemplate[] = data.map((p) => ({
                     id: p.id,
                     title: p.title,
                     content: p.content,
@@ -97,7 +97,6 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
                     isSystem: p.is_system
                 }));
                 // Merge DB prompts
-                // Filter out static system prompts if they exist in DB to avoid duplicates if we decide to migrate them
                 allPrompts = [...allPrompts, ...dbPrompts];
             }
         }
@@ -116,8 +115,20 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
         setPrompts(allPrompts);
     };
 
-    const handleCopy = (text: string, id: string) => {
-        navigator.clipboard.writeText(text);
+    const handleCopy = async (text: string, id: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch {
+            // Fallback for non-HTTPS or unsupported environments
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
         setCopiedId(id);
         setTimeout(() => setCopiedId(null), 2000);
     };
@@ -148,7 +159,7 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
         }
 
         // Update UI
-        setPrompts(prompts.filter(p => p.id !== id));
+        setPrompts(prev => prev.filter(p => p.id !== id));
     };
 
     const handleEditPrompt = (prompt: PromptTemplate) => {
@@ -192,18 +203,18 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
                     return;
                 }
 
-                // Update local state
-                setPrompts(prompts.map(p => p.id === editingPrompt.id ? { ...p, ...promptData, tags: promptData.tags } : p));
+                // Update UI - functional state
+                setPrompts(prev => prev.map(p => p.id === editingPrompt.id ? { ...p, ...promptData, isSystem: !!promptData.is_system } as PromptTemplate : p));
             } else {
-                // Update LocalStorage
+                // LOCALSTORAGE UPDATE
                 const saved = localStorage.getItem('hg_user_prompts');
                 if (saved) {
                     const localPrompts = JSON.parse(saved);
-                    const updated = localPrompts.map((p: any) => p.id === editingPrompt.id ? { ...p, ...promptData, tags: promptData.tags } : p);
+                    const updated = localPrompts.map((p: any) => p.id === editingPrompt.id ? { ...p, ...promptData, id: p.id } : p);
                     localStorage.setItem('hg_user_prompts', JSON.stringify(updated));
 
                     // Update local state
-                    setPrompts(prompts.map(p => p.id === editingPrompt.id ? { ...p, ...promptData, tags: promptData.tags } : p));
+                    setPrompts(prev => prev.map(p => p.id === editingPrompt.id ? { ...p, ...promptData, tags: promptData.tags } : p));
                 }
             }
         } else {
@@ -226,11 +237,11 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
                         title: data.title,
                         content: data.content,
                         category: data.category,
-                        tags: data.tags,
+                        tags: data.tags || [],
                         author: data.author_name,
                         isSystem: data.is_system
                     };
-                    setPrompts([newPrompt, ...prompts]);
+                    setPrompts(prev => [newPrompt, ...prev]);
                 }
             } else {
                 const newPrompt: PromptTemplate = {
@@ -271,43 +282,43 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
     });
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col pt-20">
+        <div className="min-h-screen bg-transparent flex flex-col pt-16 relative z-10">
             {/* Header */}
-            <div className="bg-white border-b-4 border-charcoal sticky top-16 z-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex items-center justify-between">
+            <div className="bg-white dark:bg-cyber-black border-y-[4px] border-charcoal dark:border-neon-pink sticky top-16 z-20 shadow-neo">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center">
-                            <Button variant="ghost" onClick={onBack} className="mr-4 text-charcoal hover:bg-charcoal/5">
-                                <span className="font-bold">← {t('common.back')}</span>
+                            <Button variant="ghost" onClick={onBack} className="mr-4 text-charcoal dark:text-white hover:bg-charcoal/10 rounded-none border-2 border-transparent hover:border-charcoal dark:hover:border-neon-pink transition-all">
+                                <span className="font-black text-sm uppercase tracking-widest">← {t('common.back')}</span>
                             </Button>
-                            <h1 className="text-2xl font-bold text-charcoal flex items-center">
-                                <Sparkles className="w-6 h-6 mr-2 text-pop-purple fill-current" />
+                            <h1 className="text-3xl md:text-4xl font-black text-charcoal dark:text-white flex items-center uppercase tracking-tighter transform -rotate-1 origin-left break-all md:break-normal">
+                                <Sparkles className="hidden md:block w-8 h-8 mr-3 text-pop-purple fill-current" />
                                 {t('prompts.title')}
                             </h1>
                         </div>
                     </div>
 
                     {/* Filters */}
-                    <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                        <div className="flex flex-1 gap-4 items-center w-full overflow-hidden">
-                            <div className="relative flex-grow max-w-md min-w-[200px]">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-charcoal/40 w-4 h-4" />
+                    <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between w-full">
+                        <div className="flex flex-col sm:flex-row flex-1 gap-4 items-stretch sm:items-center w-full">
+                            <div className="relative flex-grow max-w-sm min-w-[200px]">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-charcoal dark:text-white w-5 h-5 stroke-[3]" />
                                 <input
                                     type="text"
                                     placeholder={t('prompts.searchPlaceholder')}
-                                    className="w-full pl-10 pr-4 py-2 border-2 border-charcoal rounded-lg focus:outline-none focus:ring-0 shadow-neo-sm focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all"
+                                    className="w-full pl-10 pr-3 py-2 border-[3px] border-charcoal dark:border-neon-pink rounded-none focus:outline-none focus:ring-0 shadow-neo-sm focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all text-sm font-bold bg-white dark:bg-cyber-gray text-charcoal dark:text-white"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
-                            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
+                            <div className="flex flex-wrap gap-2 py-1 px-1">
                                 {categories.map(cat => (
                                     <button
                                         key={cat}
                                         onClick={() => setSelectedCategory(cat)}
-                                        className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap border-2 border-charcoal transition-all ${selectedCategory === cat
-                                            ? 'bg-pop-blue text-charcoal shadow-neo-sm'
-                                            : 'bg-white text-charcoal hover:bg-slate-50'
+                                        className={`px-3 py-1.5 rounded-none text-xs font-black uppercase tracking-wider border-[3px] border-charcoal transition-all whitespace-nowrap ${selectedCategory === cat
+                                            ? 'bg-pop-purple dark:bg-neon-purple text-charcoal shadow-neo-sm translate-x-[-1px] translate-y-[-1px]'
+                                            : 'bg-white dark:bg-cyber-gray text-charcoal dark:text-white hover:bg-pop-yellow hover:text-charcoal hover:shadow-neo-xs'
                                             }`}
                                     >
                                         {cat}
@@ -323,8 +334,8 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
                             setNewTags('');
                             setIsSystemPrompt(false);
                             setIsModalOpen(true);
-                        }} className="shrink-0 ml-4 bg-pop-yellow text-charcoal border-2 border-charcoal shadow-neo hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]">
-                            <Plus className="w-4 h-4 mr-2" />
+                        }} className="shrink-0 px-4 py-2 bg-pop-green dark:bg-neon-green text-charcoal font-black uppercase text-sm border-[3px] border-charcoal shadow-neo-sm hover:shadow-neo hover:-translate-x-1 hover:-translate-y-1 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all rounded-none w-full md:w-auto mt-2 md:mt-0">
+                            <Plus className="w-5 h-5 mr-1 stroke-[3]" />
                             {t('prompts.add')}
                         </Button>
                     </div>
@@ -332,17 +343,17 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
             </div>
 
             {/* Content */}
-            <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full bg-white">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full bg-transparent">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                     {filteredPrompts.map(prompt => (
-                        <div key={prompt.id} className="bg-white rounded-xl border-4 border-charcoal shadow-neo hover:shadow-neo-lg transition-all hover:-translate-y-1 flex flex-col h-full group">
-                            <div className="p-6 flex-grow">
-                                <div className="flex items-start justify-between mb-4">
+                        <div key={prompt.id} className="bg-white dark:bg-cyber-gray rounded-none border-[4px] border-charcoal dark:border-neon-blue shadow-neo dark:shadow-[4px_4px_0px_0px_#00FFFF] hover:shadow-neo-lg dark:hover:shadow-[8px_8px_0px_0px_#00FFFF] transition-all hover:-translate-y-2 hover:-translate-x-2 flex flex-col h-full group">
+                            <div className="p-6 md:p-8 flex-grow">
+                                <div className="flex items-start justify-between mb-6">
                                     <div>
-                                        <span className="inline-block px-2 py-1 text-xs font-bold bg-pop-purple border-2 border-charcoal text-charcoal rounded-md mb-2 shadow-neo-sm">
+                                        <span className="inline-block px-3 py-1 text-sm font-black uppercase tracking-wider bg-pop-pink dark:bg-neon-pink border-2 border-charcoal text-charcoal rounded-none mb-4 shadow-neo-sm transform -rotate-2 group-hover:rotate-0 transition-transform duration-300">
                                             {prompt.category}
                                         </span>
-                                        <h3 className="text-lg font-bold text-charcoal line-clamp-1">{prompt.title}</h3>
+                                        <h3 className="text-2xl font-black text-charcoal dark:text-white line-clamp-2 uppercase leading-tight mb-2 decoration-4 underline-offset-4 group-hover:underline decoration-pop-yellow dark:decoration-neon-yellow">{prompt.title}</h3>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         {/* Edit Button */}
@@ -368,53 +379,50 @@ export const PromptTemplates: React.FC<PromptTemplatesProps> = ({ user, onUsePro
                                     </div>
                                 </div>
 
-                                <p className="text-charcoal/80 text-sm leading-relaxed mb-4 line-clamp-4 whitespace-pre-wrap font-medium">
+                                <p className="text-charcoal/80 dark:text-white/80 text-base leading-relaxed mb-6 line-clamp-4 whitespace-pre-wrap font-bold">
                                     {prompt.content}
                                 </p>
 
-                                <div className="flex flex-wrap gap-2 mt-auto">
+                                <div className="flex flex-wrap gap-3 mt-auto">
                                     {prompt.tags.map(tag => (
-                                        <span key={tag} className="inline-flex items-center text-xs font-bold text-charcoal/60 bg-slate-100 px-2 py-1 rounded border border-charcoal/20">
-                                            <Tag className="w-3 h-3 mr-1" />
+                                        <span key={tag} className="inline-flex items-center text-xs font-black uppercase text-charcoal bg-pop-blue dark:bg-neon-blue px-2 py-1 border-2 border-charcoal shadow-neo-xs">
+                                            <Tag className="w-3 h-3 mr-1 stroke-[3]" />
                                             {tag}
                                         </span>
                                     ))}
                                     {prompt.isSystem && (
-                                        <span className="inline-flex items-center text-xs font-bold text-charcoal bg-pop-blue/20 px-2 py-1 rounded border-2 border-pop-blue">
-                                            <Globe className="w-3 h-3 mr-1" />
+                                        <span className="inline-flex items-center text-xs font-black uppercase text-charcoal bg-pop-yellow dark:bg-neon-yellow px-2 py-1 border-2 border-charcoal shadow-neo-xs transform rotate-2">
+                                            <Globe className="w-3 h-3 mr-1 stroke-[3]" />
                                             System
                                         </span>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="border-t-4 border-charcoal p-4 bg-white rounded-b-lg flex justify-between items-center">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
+                            <div className="border-t-[4px] border-charcoal bg-white dark:bg-cyber-black flex justify-between items-stretch h-16">
+                                <button
                                     onClick={() => handleCopy(prompt.content, prompt.id)}
-                                    className={`font-bold ${copiedId === prompt.id ? 'text-green-600' : 'text-charcoal hover:bg-charcoal/5'}`}
+                                    className={`flex-1 flex justify-center items-center font-black uppercase tracking-wider border-r-[4px] border-charcoal hover:bg-pop-blue dark:hover:bg-neon-blue hover:text-charcoal transition-colors ${copiedId === prompt.id ? 'bg-pop-green dark:bg-neon-green text-charcoal' : 'text-charcoal dark:text-white'}`}
                                 >
                                     {copiedId === prompt.id ? (
                                         <>
-                                            <Check className="w-4 h-4 mr-2" />
+                                            <Check className="w-5 h-5 mr-2 stroke-[4]" />
                                             {t('prompts.copied')}
                                         </>
                                     ) : (
                                         <>
-                                            <Copy className="w-4 h-4 mr-2" />
+                                            <Copy className="w-5 h-5 mr-2 stroke-[3]" />
                                             {t('prompts.copy')}
                                         </>
                                     )}
-                                </Button>
-                                <Button
-                                    size="sm"
+                                </button>
+                                <button
                                     onClick={() => onUsePrompt(prompt.content)}
-                                    className="bg-pop-yellow text-charcoal border-2 border-charcoal shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px]"
+                                    className="flex-1 flex justify-center items-center font-black uppercase tracking-wider bg-pop-yellow dark:bg-neon-yellow text-charcoal hover:bg-charcoal hover:text-pop-yellow transition-colors"
                                 >
-                                    <Edit2 className="w-4 h-4 mr-2" />
+                                    <Sparkles className="w-5 h-5 mr-2 stroke-[3]" />
                                     {t('prompts.use')}
-                                </Button>
+                                </button>
                             </div>
                         </div>
                     ))}

@@ -39,55 +39,73 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, publicSi
 
       {/* Hero Section */}
       {/* Hero Section */}
-      <div className="bg-white dark:bg-cyber-black relative pt-32 pb-20 border-b-4 border-charcoal dark:border-neon-blue z-10 transition-colors duration-300 overflow-hidden">
+      <div className="bg-white dark:bg-cyber-black relative pt-24 pb-12 border-b-4 border-charcoal dark:border-neon-blue z-10 transition-colors duration-300 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-dot-pattern pointer-events-none" />
 
         {/* Floating Decorative Elements */}
-        <div className="absolute top-20 left-10 animate-float-slow hidden lg:block">
-          <div className="w-12 h-12 bg-pop-yellow border-2 border-charcoal rounded-full flex items-center justify-center shadow-neo">
-            <span className="text-2xl">✨</span>
+        <div className="absolute top-16 left-10 animate-float-slow hidden lg:block">
+          <div className="w-10 h-10 bg-pop-yellow border-2 border-charcoal rounded-full flex items-center justify-center shadow-neo-sm">
+            <span className="text-xl">✨</span>
           </div>
         </div>
-        <div className="absolute top-40 right-20 animate-float-medium hidden lg:block">
-          <div className="w-16 h-16 bg-pop-pink border-2 border-charcoal rotate-12 flex items-center justify-center shadow-neo">
-            <span className="text-3xl text-white font-bold">{'</>'}</span>
+        <div className="absolute top-28 right-20 animate-float-medium hidden lg:block">
+          <div className="w-12 h-12 bg-pop-pink border-2 border-charcoal rotate-12 flex items-center justify-center shadow-neo-sm">
+            <span className="text-xl text-white font-black">{'</>'}</span>
           </div>
         </div>
-        <div className="absolute bottom-20 left-1/4 animate-float-fast hidden lg:block">
-          <div className="w-10 h-10 bg-pop-blue border-2 border-charcoal rounded-lg -rotate-6 flex items-center justify-center shadow-neo">
-            <Globe className="w-6 h-6 text-white" />
+        <div className="absolute bottom-16 left-1/4 animate-float-fast hidden lg:block">
+          <div className="w-8 h-8 bg-pop-blue border-2 border-charcoal rounded-lg -rotate-6 flex items-center justify-center shadow-neo-sm">
+            <Globe className="w-5 h-5 text-white" />
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             {/* Main Content (Moved Up) */}
-            <div className="flex flex-col items-center text-center mb-16 max-w-3xl mx-auto">
+            <div className="flex flex-col items-center text-center mb-10 max-w-3xl mx-auto">
               <div>
-                <h2 className="font-extrabold text-5xl md:text-6xl text-charcoal dark:text-white mb-8 border-b-8 border-pop-yellow dark:border-neon-yellow inline-block leading-tight tracking-tight">
+                <h2 className="font-black text-5xl md:text-6xl lg:text-7xl text-charcoal dark:text-white mb-6 border-b-[8px] border-pop-yellow dark:border-neon-yellow inline-block leading-none tracking-tighter uppercase transform -rotate-1">
                   {t('landing.subtitle')}
                 </h2>
               </div>
               <div>
-                <p className="text-charcoal dark:text-gray-300 text-xl leading-relaxed font-medium max-w-2xl mx-auto">
+                <p className="text-charcoal dark:text-gray-300 text-lg leading-relaxed font-bold max-w-2xl mx-auto">
                   {t('landing.description')}
                 </p>
               </div>
             </div>
 
             {/* Search Bar (Moved Down) */}
-            <div className="relative max-w-2xl mx-auto mb-12 group">
+            <div className="relative max-w-2xl mx-auto mb-8 group">
               <div className="absolute -inset-1 bg-gradient-to-r from-pop-pink via-pop-purple to-pop-blue rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative">
                 <input
                   type="text"
                   placeholder={t('landing.searchPlaceholder') || "Search or type to create..."}
-                  className="w-full h-20 pl-10 pr-24 rounded-full border-4 border-charcoal dark:border-neon-pink bg-white dark:bg-cyber-gray text-xl font-bold text-charcoal dark:text-white placeholder-charcoal/40 dark:placeholder-white/30 focus:outline-none focus:ring-0 shadow-neo dark:shadow-[4px_4px_0px_0px_#FF00FF] transition-all focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none"
+                  className="w-full h-16 pl-6 pr-20 border-4 border-charcoal dark:border-neon-pink bg-white dark:bg-cyber-gray text-lg sm:text-xl font-black text-charcoal dark:text-white placeholder-charcoal/40 dark:placeholder-white/30 focus:outline-none focus:ring-0 shadow-[6px_6px_0px_0px_#000000] dark:shadow-[6px_6px_0px_0px_#FF00FF] transition-all focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#000000] dark:focus:shadow-[4px_4px_0px_0px_#FF00FF]"
                 />
-                <button className="absolute right-4 top-4 bottom-4 aspect-square bg-charcoal dark:bg-neon-pink rounded-full text-white dark:text-charcoal flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
-                  <ArrowRight className="w-8 h-8" />
+                <button className="absolute right-2 top-2 bottom-2 aspect-square bg-pop-pink dark:bg-neon-pink border-4 border-charcoal text-charcoal flex items-center justify-center transition-all shadow-neo-sm hover:-translate-y-[2px] hover:-translate-x-[2px] hover:shadow-neo active:translate-x-[2px] active:translate-y-[2px] active:shadow-none z-10">
+                  <ArrowRight className="w-6 h-6 md:w-8 md:h-8 stroke-[3]" />
                 </button>
+              </div>
+            </div>
+
+            {/* Neo-brutalist Marquee */}
+            <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] mt-12 bg-pop-yellow dark:bg-neon-yellow border-y-[3px] border-charcoal py-3 flex overflow-hidden whitespace-nowrap transform -rotate-1 scale-[1.01] shadow-neo z-20">
+              <style dangerouslySetInnerHTML={{__html: `
+                @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
+                .animate-marquee-custom { display: inline-block; white-space: nowrap; animation: marquee 24s linear infinite; }
+              `}} />
+              <div className="animate-marquee-custom font-black text-xl md:text-2xl uppercase tracking-widest text-charcoal">
+                <span className="mx-8">✦ GENERATING AWESOME WEBSITES</span>
+                <span className="mx-8">✦ POWERED BY AI</span>
+                <span className="mx-8">✦ NO CODE NEEDED</span>
+                <span className="mx-8">✦ JUST TYPE AND CREATE</span>
+                <span className="mx-8">✦ GENERATING AWESOME WEBSITES</span>
+                <span className="mx-8">✦ POWERED BY AI</span>
+                <span className="mx-8">✦ NO CODE NEEDED</span>
+                <span className="mx-8">✦ JUST TYPE AND CREATE</span>
               </div>
             </div>
           </div>
@@ -186,7 +204,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, publicSi
             <div className="flex space-x-8">
               <a href="/images/xhs-code.jpg" target="_blank" className="text-charcoal dark:text-white hover:text-pop-purple dark:hover:text-neon-purple transition-colors text-sm font-bold tracking-wide border-b-2 border-transparent hover:border-charcoal dark:hover:border-neon-purple">{t('footer.redNote')}</a>
               <a href="/images/wechat-code.jpg" target="_blank" className="text-charcoal dark:text-white hover:text-pop-green dark:hover:text-neon-green transition-colors text-sm font-bold tracking-wide border-b-2 border-transparent hover:border-charcoal dark:hover:border-neon-green">{t('footer.weChat')}</a>
-              <a href="/images/wechat-code.png" target="_blank" className="text-charcoal dark:text-white hover:text-pop-blue dark:hover:text-neon-blue transition-colors text-sm font-bold tracking-wide border-b-2 border-transparent hover:border-charcoal dark:hover:border-neon-blue">{t('footer.planet')}</a>
+              <a href="/images/zsxq-code.jpg" target="_blank" className="text-charcoal dark:text-white hover:text-pop-blue dark:hover:text-neon-blue transition-colors text-sm font-bold tracking-wide border-b-2 border-transparent hover:border-charcoal dark:hover:border-neon-blue">{t('footer.planet')}</a>
             </div>
             <div className="text-charcoal/60 dark:text-white/40 text-xs font-mono">
               {t('footer.copyright')}

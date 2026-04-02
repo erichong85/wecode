@@ -10,10 +10,15 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setTheme] = useState<Theme>(() => {
-        const savedTheme = localStorage.getItem('theme');
-        return (savedTheme as Theme) || 'light';
-    });
+    const [theme, setTheme] = useState<Theme>('light');
+
+    // 从 localStorage 加载主题（SSR 兼容）
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('theme') as Theme;
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+            setTheme(savedTheme);
+        }
+    }, []);
 
     useEffect(() => {
         const root = window.document.documentElement;

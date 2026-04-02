@@ -1,28 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// SQL SCHEMA FOR SUPABASE
-// Run this in your Supabase SQL Editor:
-/*
-create table sites (
-  id uuid default gen_random_uuid() primary key,
-  user_id text not null, -- simplified for demo, ideally references auth.users
-  author_name text,
-  title text,
-  html_content text,
-  views integer default 0,
-  published boolean default true,
-  is_public boolean default true,
-  allow_source_download boolean default true,
-  created_at bigint,
-  updated_at bigint
-);
-
-alter table sites enable row level security;
-create policy "Public read" on sites for select using (true);
-create policy "Public insert" on sites for insert with check (true);
-create policy "Public update" on sites for update using (true);
-*/
-
 // Initialize Client
 const supabaseUrl = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : '';
 const supabaseKey = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : '';
@@ -31,13 +8,56 @@ export const supabase = (supabaseUrl && supabaseKey)
   ? createClient(supabaseUrl, supabaseKey)
   : null;
 
+// ========================================
+// DB 类型定义（P2 #12：替代 any 类型）
+// ========================================
+
+export interface DBSite {
+  id: string;
+  user_id: string;
+  author_name: string | null;
+  title: string | null;
+  description: string | null;
+  html_content: string | null;
+  views: number;
+  likes: number;
+  favorites: number;
+  published: boolean;
+  is_public: boolean;
+  allow_source_download: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface DBUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: 'user' | 'admin';
+  avatar: string | null;
+  created_at: string;
+  last_login_at: string | null;
+}
+
+export interface DBPrompt {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  author_id: string | null;
+  author_name: string | null;
+  is_system: boolean;
+  created_at: string;
+}
+
 // Helper to map DB snake_case to App camelCase
-// Helper to map DB snake_case to App camelCase
-export const mapSiteFromDB = (dbSite: any) => ({
+export const mapSiteFromDB = (dbSite: DBSite) => ({
   id: dbSite.id,
   userId: dbSite.user_id,
   authorName: dbSite.author_name || 'Unknown',
   title: dbSite.title || 'Untitled',
+  description: dbSite.description || '',
   htmlContent: dbSite.html_content || '',
   createdAt: typeof dbSite.created_at === 'string' ? new Date(dbSite.created_at).getTime() : Number(dbSite.created_at),
   updatedAt: dbSite.updated_at ? (typeof dbSite.updated_at === 'string' ? new Date(dbSite.updated_at).getTime() : Number(dbSite.updated_at)) : undefined,
@@ -49,8 +69,21 @@ export const mapSiteFromDB = (dbSite: any) => ({
   allowSourceDownload: dbSite.allow_source_download
 });
 
-export const mapSiteToDB = (site: any) => ({
-  // id is auto-generated on insert if missing
+export const mapSiteToDB = (site: {
+  id?: string;
+  userId: string;
+  authorName: string;
+  title: string;
+  htmlContent: string;
+  views?: number;
+  likes?: number;
+  favorites?: number;
+  published: boolean;
+  isPublic: boolean;
+  allowSourceDownload: boolean;
+  createdAt?: number;
+  updatedAt?: number;
+}) => ({
   ...(site.id && { id: site.id }),
   user_id: site.userId,
   author_name: site.authorName,
@@ -64,4 +97,14 @@ export const mapSiteToDB = (site: any) => ({
   allow_source_download: site.allowSourceDownload,
   created_at: site.createdAt ? new Date(site.createdAt).toISOString() : new Date().toISOString(),
   updated_at: site.updatedAt ? new Date(site.updatedAt).toISOString() : new Date().toISOString()
+});
+
+export const mapUserFromDB = (dbUser: DBUser) => ({
+  id: dbUser.id,
+  email: dbUser.email,
+  name: dbUser.name || dbUser.email.split('@')[0],
+  role: dbUser.role,
+  avatar: dbUser.avatar,
+  createdAt: new Date(dbUser.created_at).getTime(),
+  lastLoginAt: dbUser.last_login_at ? new Date(dbUser.last_login_at).getTime() : Date.now()
 });

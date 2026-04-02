@@ -1,766 +1,223 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { supabase, mapSiteFromDB, mapSiteToDB } from './lib/supabase';
+import { User, HostedSite, ViewState } from './types';
 import { Navbar } from './components/Navbar';
-import { AuthModal } from './views/AuthModal';
+import { LandingPage as Landing } from './views/LandingPage';
 import { Dashboard } from './views/Dashboard';
 import { Editor } from './views/Editor';
 import { Viewer } from './views/Viewer';
-import { LandingPage } from './views/LandingPage';
 import { AdminPanel } from './views/AdminPanel';
 import { PromptTemplates } from './views/PromptTemplates';
-import { User, HostedSite, ViewState } from './types';
 import { ConfirmModal } from './components/ConfirmModal';
-import { supabase, mapSiteFromDB, mapSiteToDB } from './lib/supabase';
+import { AuthModal } from './views/AuthModal';
 import { LanguageProvider } from './contexts/LanguageContext';
-
-// Mock Data for Admin Simulation
-const MOCK_USERS: User[] = [
-  {
-    id: 'u_101',
-    name: '李明',
-    email: 'liming@example.com',
-    role: 'user',
-    avatar: 'L',
-    createdAt: Date.now() - 86400000 * 30, // 30 days ago
-    lastLoginAt: Date.now() - 86400000 * 1 // 1 day ago
-  },
-  {
-    id: 'u_102',
-    name: '王芳',
-    email: 'wangfang@design.com',
-    role: 'user',
-    avatar: 'W',
-    createdAt: Date.now() - 86400000 * 15, // 15 days ago
-    lastLoginAt: Date.now() - 3600000 * 4 // 4 hours ago
-  },
-];
-
-const MOCK_SITES: HostedSite[] = [
-  {
-    id: 's_demo_1',
-    userId: 'u_101',
-    authorName: '李明',
-    title: '我的摄影作品集',
-    htmlContent: '<!DOCTYPE html><html><body style="text-align:center; padding: 50px; background: #1a1a1a; color: white;"><h1>摄影作品展示</h1><p>欢迎来到我的光影世界</p><!-- HostGenie Footer --><footer style="display: block; width: 100%; padding: 24px 0; margin-top: 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-family: sans-serif; color: #64748b; font-size: 14px;"><p style="margin: 0 0 8px 0;">托管于 <a href="#" style="color: #4f46e5; text-decoration: none; font-weight: bold;">HostGenie</a></p><p style="margin: 0;">技术支持微信：<span style="color: #334155; font-weight: 500;">35808387</span></p></footer></body></html>',
-    createdAt: Date.now() - 86400000 * 5,
-    views: 1240,
-    likes: 89,
-    favorites: 45,
-    published: true,
-    isPublic: true,
-    allowSourceDownload: true
-  },
-  {
-    id: 's_demo_2',
-    userId: 'u_102',
-    authorName: '王芳',
-    title: 'Modern UI Kit 介绍',
-    htmlContent: '<!DOCTYPE html><html><body style="text-align:center; padding: 50px; color: #333;"><h1>Modern UI Kit</h1><p>最优雅的 React 组件库</p><!-- HostGenie Footer --><footer style="display: block; width: 100%; padding: 24px 0; margin-top: 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-family: sans-serif; color: #64748b; font-size: 14px;"><p style="margin: 0 0 8px 0;">托管于 <a href="#" style="color: #4f46e5; text-decoration: none; font-weight: bold;">HostGenie</a></p><p style="margin: 0;">技术支持微信：<span style="color: #334155; font-weight: 500;">35808387</span></p></footer></body></html>',
-    createdAt: Date.now() - 86400000 * 2,
-    views: 856,
-    likes: 64,
-    favorites: 32,
-    published: true,
-    isPublic: true,
-    allowSourceDownload: false
-  },
-];
+import { ThemeProvider } from './contexts/ThemeContext';
+// Hooks
+import { useAuth } from './hooks/useAuth';
+import { useSites } from './hooks/useSites';
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<ViewState>('LANDING');
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  // Data State
-  const [allSites, setAllSites] = useState<HostedSite[]>([]);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const { user, view, setView, logout } = useAuth();
+  const { 
+    allSites, setAllSites, 
+    allUsers, 
+    userLikes, setUserLikes, 
+    userFavorites, setUserFavorites, 
+    isSyncing, setIsSyncing, 
+    loadSites 
+  } = useSites(user);
 
   const [currentSite, setCurrentSite] = useState<HostedSite | null>(null);
   const [editingSite, setEditingSite] = useState<HostedSite | null>(null);
-
-  // User interaction state
-  const [userLikes, setUserLikes] = useState<string[]>([]); // site IDs user has liked
-  const [userFavorites, setUserFavorites] = useState<string[]>([]); // site IDs user has favorited
-
-  // Delete Modal State
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [initialPrompt, setInitialPrompt] = useState<string>('');
 
-  // Check if we have real backend connected
   const hasRealBackend = !!supabase;
 
-  // 1. Initial Load & Auth Listener
-  useEffect(() => {
-    // Load Sites
-    if (hasRealBackend) {
-      loadSitesFromSupabase();
-    } else {
-      // Load from LocalStorage (Fallback)
-      const savedSites = localStorage.getItem('hg_sites');
-      if (savedSites) {
-        try {
-          const parsed = JSON.parse(savedSites);
-          if (Array.isArray(parsed)) setAllSites(parsed);
-          else setAllSites(MOCK_SITES);
-        } catch (e) { setAllSites(MOCK_SITES); }
-      } else {
-        setAllSites(MOCK_SITES);
-      }
+  // Optimized Handlers
+  const handleViewSite = useCallback(async (site: HostedSite) => {
+    setCurrentSite(site);
+    setView('VIEWER');
+    window.location.hash = `site/${site.id}`;
+
+    if (hasRealBackend && supabase) {
+      await supabase.rpc('increment_views', { p_site_id: site.id });
     }
+    setAllSites(prev => prev.map(s => s.id === site.id ? { ...s, views: s.views + 1 } : s));
+  }, [hasRealBackend, setAllSites, setView]);
 
-    // Auth Listener
-    if (supabase) {
-      // Check active session
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          const u = session.user;
-          const email = u.email || '';
-          setUser({
-            id: u.id,
-            email: email,
-            name: u.user_metadata?.name || email.split('@')[0] || 'User',
-            role: email.startsWith('admin') ? 'admin' : 'user', // Simple admin check
-            createdAt: new Date(u.created_at).getTime(),
-            lastLoginAt: u.last_sign_in_at ? new Date(u.last_sign_in_at).getTime() : Date.now()
-          });
-          setView('DASHBOARD');
-        }
-      });
+  const handleEditSite = useCallback((site: HostedSite) => {
+    setEditingSite(site);
+    setView('EDITOR');
+  }, [setView]);
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
-          const u = session.user;
-          const email = u.email || '';
-          setUser({
-            id: u.id,
-            email: email,
-            name: u.user_metadata?.name || email.split('@')[0] || 'User',
-            role: email.startsWith('admin') ? 'admin' : 'user',
-            createdAt: new Date(u.created_at).getTime(),
-            lastLoginAt: u.last_sign_in_at ? new Date(u.last_sign_in_at).getTime() : Date.now()
-          });
-          // Only switch to dashboard if we are on landing or auth just happened
-          if (view === 'LANDING') setView('DASHBOARD');
-        } else {
-          setUser(null);
-          setView('LANDING');
-        }
-      });
+  const handleLikeSite = useCallback(async (siteId: string) => {
+    if (!user || !hasRealBackend || !supabase) return alert('请先登录');
 
-      return () => subscription.unsubscribe();
-    } else {
-      // Fallback for no backend (Mock Mode)
-      const savedUser = localStorage.getItem('hg_user');
-      if (savedUser) {
-        try {
-          const parsedUser = JSON.parse(savedUser);
-          if (parsedUser) setUser(parsedUser);
-        } catch (e) { }
-      }
-    }
-
-    // Handle Hash routing for preview
-    const handleHashChange = () => {
-      if (window.location.hash.startsWith('#site/')) {
-        const siteId = window.location.hash.replace('#site/', '');
-        // We need to wait for sites to load, or fetch specifically
-        // For simplicity in React State, we just rely on allSites
-      }
-    };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  // 2. Fetch Sites & Users from Supabase
-  const loadSitesFromSupabase = async () => {
-    if (!supabase) return;
-    setIsSyncing(true);
-
-    // Fetch Sites
-    const { data: sitesData } = await supabase
-      .from('sites')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20); // Limit to 20 recent sites for performance
-
-    if (sitesData) {
-      const mapped = sitesData.map(mapSiteFromDB);
-      setAllSites(mapped);
-    }
-
-    // Fetch Users (Only if Admin)
-    // Note: We check current user role, or just fetch if we have permission
-    const { data: usersData } = await supabase
-      .from('users')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (usersData) {
-      const mappedUsers: User[] = usersData.map((u: any) => ({
-        id: u.id,
-        email: u.email,
-        name: u.name || u.email.split('@')[0],
-        role: u.role,
-        avatar: u.avatar,
-        createdAt: u.created_at,
-        lastLoginAt: u.last_login_at
-      }));
-      setAllUsers(mappedUsers);
-    }
-
-    setIsSyncing(false);
-  };
-
-  // Load user's likes and favorites
-  const loadUserInteractions = async () => {
-    if (!supabase || !user) return;
+    const isCurrentlyLiked = userLikes.includes(siteId);
+    setAllSites(prev => prev.map(s => s.id === siteId ? { ...s, likes: isCurrentlyLiked ? Math.max(0, s.likes - 1) : s.likes + 1 } : s));
+    setUserLikes(prev => isCurrentlyLiked ? prev.filter(id => id !== siteId) : [...prev, siteId]);
 
     try {
-      // Load user likes
-      const { data: likes } = await supabase
-        .from('user_likes')
-        .select('site_id')
-        .eq('user_id', user.id);
-
-      if (likes) {
-        setUserLikes(likes.map((l: any) => l.site_id));
-      }
-
-      // Load user favorites
-      const { data: favorites } = await supabase
-        .from('user_favorites')
-        .select('site_id')
-        .eq('user_id', user.id);
-
-      if (favorites) {
-        setUserFavorites(favorites.map((f: any) => f.site_id));
-      }
-    } catch (error) {
-      console.error('Failed to load user interactions:', error);
+      const { error } = await supabase.rpc('toggle_like', { p_user_id: user.id, p_site_id: siteId });
+      if (error) throw error;
+    } catch (error: any) {
+      // Rollback
+      setAllSites(prev => prev.map(s => s.id === siteId ? { ...s, likes: isCurrentlyLiked ? s.likes + 1 : Math.max(0, s.likes - 1) } : s));
+      setUserLikes(prev => isCurrentlyLiked ? [...prev, siteId] : prev.filter(id => id !== siteId));
+      alert(`点赞失败: ${error.message}`);
     }
-  };
+  }, [user, hasRealBackend, userLikes, setAllSites, setUserLikes]);
 
-  // Load user interactions when user logs in
-  useEffect(() => {
-    if (user && hasRealBackend) {
-      loadUserInteractions();
-    } else {
-      setUserLikes([]);
-      setUserFavorites([]);
+  const handleFavoriteSite = useCallback(async (siteId: string) => {
+    if (!user || !hasRealBackend || !supabase) return alert('请先登录');
+
+    const isCurrentlyFavorited = userFavorites.includes(siteId);
+    setAllSites(prev => prev.map(s => s.id === siteId ? { ...s, favorites: isCurrentlyFavorited ? Math.max(0, s.favorites - 1) : s.favorites + 1 } : s));
+    setUserFavorites(prev => isCurrentlyFavorited ? prev.filter(id => id !== siteId) : [...prev, siteId]);
+
+    try {
+      const { error } = await supabase.rpc('toggle_favorite', { p_user_id: user.id, p_site_id: siteId });
+      if (error) throw error;
+    } catch (error: any) {
+      setAllSites(prev => prev.map(s => s.id === siteId ? { ...s, favorites: isCurrentlyFavorited ? s.favorites + 1 : Math.max(0, s.favorites - 1) } : s));
+      setUserFavorites(prev => isCurrentlyFavorited ? [...prev, siteId] : prev.filter(id => id !== siteId));
+      alert(`收藏失败: ${error.message}`);
     }
-  }, [user]);
+  }, [user, hasRealBackend, userFavorites, setAllSites, setUserFavorites]);
 
-  // 3. Sync to LocalStorage (Only if no backend)
-  useEffect(() => {
-    if (!hasRealBackend && allSites.length > 0) {
-      localStorage.setItem('hg_sites', JSON.stringify(allSites));
-    }
-  }, [allSites, hasRealBackend]);
-
-  // Auth Handling
-  const handleLogin = (incomingUser: User) => {
-    // Legacy handler for mock mode, or if AuthModal passes user manually
-    // With Supabase listener, this might be redundant but keeps compatibility
-    setUser(incomingUser);
-    if (!hasRealBackend) {
-      localStorage.setItem('hg_user', JSON.stringify(incomingUser));
-    }
-    setView(incomingUser.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
-  };
-
-  const handleLogout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
-      // Listener will handle state update
-    } else {
-      setUser(null);
-      localStorage.removeItem('hg_user');
-      setView('LANDING');
-    }
-  };
-
-  // CRUD Operations
   const handleSaveSite = async (data: { id?: string, title: string, htmlContent: string, isPublic: boolean, allowSourceDownload: boolean }) => {
     if (!user) return;
     setIsSyncing(true);
 
-    // Inject Footer Logic
-    const appUrl = window.location.origin;
-    const footerStyles = `
-      <style>
-        html, body { min-height: 100%; margin: 0; }
-        body { display: flex; flex-direction: column; padding-bottom: 40px; }
-        #hg-footer { 
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          padding: 8px 16px;
-          text-align: left;
-          font-size: 11px;
-          line-height: 1.4;
-          z-index: 9999;
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(8px);
-          color: rgba(255, 255, 255, 0.9);
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-          border-radius: 0 8px 0 0;
-        }
-        #hg-footer p {
-          margin: 0;
-        }
-        @media (max-width: 640px) {
-          #hg-footer {
-            font-size: 10px;
-            padding: 6px 12px;
-          }
-        }
-      </style>
-    `;
-
-    const footerHtml = `
-      <!-- HostGenie Footer -->
-      <footer id="hg-footer">
-        <p>技术支持微信：35808387</p>
-      </footer>
-    `;
-
+    const footerStyles = `<style>html,body{min-height:100%;margin:0;}body{display:flex;flex-direction:column;padding-bottom:40px;}#hg-footer{position:fixed;bottom:0;left:0;padding:8px 16px;text-align:left;font-size:11px;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);color:#fff;border-radius:0 8px 0 0;}</style>`;
+    const footerHtml = `<footer id="hg-footer"><p>技术支持微信：35808387</p></footer>`;
+    
     let finalHtml = data.htmlContent;
-
-    // Inject Styles
     if (!finalHtml.includes('#hg-footer')) {
-      const headCloseIndex = finalHtml.indexOf('</head>');
-      if (headCloseIndex !== -1) {
-        finalHtml = finalHtml.slice(0, headCloseIndex) + footerStyles + finalHtml.slice(headCloseIndex);
-      } else {
-        // If no head, try to prepend to body or just start
-        finalHtml = footerStyles + finalHtml;
-      }
-
-      // Inject Footer
-      const bodyCloseIndex = finalHtml.lastIndexOf('</body>');
-      if (bodyCloseIndex !== -1) {
-        finalHtml = finalHtml.slice(0, bodyCloseIndex) + footerHtml + finalHtml.slice(bodyCloseIndex);
-      } else {
-        finalHtml += footerHtml;
-      }
+      finalHtml = finalHtml.includes('</head>') ? finalHtml.replace('</head>', `${footerStyles}</head>`) : footerStyles + finalHtml;
+      finalHtml = finalHtml.includes('</body>') ? finalHtml.replace('</body>', `${footerHtml}</body>`) : finalHtml + footerHtml;
     }
 
     const siteObj: HostedSite = {
-      id: data.id || Math.random().toString(36).substr(2, 9),
+      id: data.id || '',
       userId: user.id,
       authorName: user.name,
       title: data.title,
       htmlContent: finalHtml,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      views: 0,
-      likes: 0,
-      favorites: 0,
+      views: 0, likes: 0, favorites: 0,
       published: true,
       isPublic: data.isPublic,
       allowSourceDownload: data.allowSourceDownload
     };
 
     if (hasRealBackend && supabase) {
-      // SAVE TO SUPABASE
       if (data.id) {
-        // Update
         await supabase.from('sites').update(mapSiteToDB(siteObj)).eq('id', data.id);
+        setAllSites(prev => prev.map(s => s.id === data.id ? { ...s, ...siteObj, createdAt: s.createdAt, views: s.views } : s));
       } else {
-        // Insert (remove ID to let DB generate UUID)
         const payload = mapSiteToDB(siteObj);
-        delete payload.id;
-        console.log('Supabase Insert Payload:', payload);
-        const { error: insertError } = await supabase.from('sites').insert(payload);
-        if (insertError) {
-          console.error('Supabase Insert Error Object:', insertError);
-          console.error('Error Message:', insertError.message);
-          console.error('Error Code:', insertError.code);
-          console.error('Error Details:', insertError.details);
-          alert('发布失败: ' + (insertError.message || 'Unknown error'));
-          setIsSyncing(false);
-          return;
-        }
-      }
-      await loadSitesFromSupabase(); // Refresh
-    } else {
-      // SAVE TO LOCALSTORAGE
-      if (data.id) {
-        setAllSites(allSites.map(s => s.id === data.id ? { ...s, ...siteObj, createdAt: s.createdAt, views: s.views } : s));
-      } else {
-        setAllSites([siteObj, ...allSites]);
+        delete (payload as any).id;
+        const { data: inserted, error } = await supabase.from('sites').insert(payload).select().single();
+        if (!error && inserted) setAllSites(prev => [mapSiteFromDB(inserted), ...prev]);
+        else if (error) alert('发布失败: ' + error.message);
       }
     }
-
+    
     setIsSyncing(false);
     setEditingSite(null);
     setView('DASHBOARD');
   };
 
-  const handleDeleteSite = (id: string) => {
-    setDeleteTargetId(id);
-  };
-
   const confirmDelete = async () => {
     if (!deleteTargetId) return;
-    const id = deleteTargetId;
-
     if (hasRealBackend && supabase) {
-      await supabase.from('sites').delete().eq('id', id);
-      await loadSitesFromSupabase();
-    } else {
-      setAllSites(allSites.filter(s => s.id !== id));
+      await supabase.from('sites').delete().eq('id', deleteTargetId);
     }
+    setAllSites(prev => prev.filter(s => s.id !== deleteTargetId));
     setDeleteTargetId(null);
   };
 
-  // View Routing
-  const handleViewSite = async (site: HostedSite) => {
-    setCurrentSite(site);
-    setView('VIEWER');
-    window.location.hash = `site/${site.id}`;
-
-    // Increment views count
-    if (hasRealBackend && supabase) {
-      await supabase
-        .from('sites')
-        .update({ views: site.views + 1 })
-        .eq('id', site.id);
-      // Refresh sites to get updated count
-      await loadSitesFromSupabase();
-    } else {
-      // Local storage fallback
-      setAllSites(allSites.map(s =>
-        s.id === site.id ? { ...s, views: s.views + 1 } : s
-      ));
-    }
-  };
-
-  const handleEditSite = (site: HostedSite) => {
-    setEditingSite(site);
-    setView('EDITOR');
-  };
-
-  // Like functionality
-  const handleLikeSite = async (siteId: string) => {
-    if (!user || !hasRealBackend || !supabase) {
-      alert('请先登录');
-      return;
-    }
-
-    // Optimistic update - 立即更新 UI
-    const isCurrentlyLiked = userLikes.includes(siteId);
-    const newLikedState = !isCurrentlyLiked;
-
-    // 立即更新本地状态
-    if (newLikedState) {
-      setUserLikes([...userLikes, siteId]);
-      setAllSites(allSites.map(s =>
-        s.id === siteId ? { ...s, likes: s.likes + 1 } : s
-      ));
-    } else {
-      setUserLikes(userLikes.filter(id => id !== siteId));
-      setAllSites(allSites.map(s =>
-        s.id === siteId ? { ...s, likes: Math.max(0, s.likes - 1) } : s
-      ));
-    }
-
-    // 后台异步执行数据库操作
-    try {
-      console.log('点赞操作开始:', { userId: user.id, siteId });
-
-      if (isCurrentlyLiked) {
-        // Unlike
-        console.log('取消点赞...');
-        const { data: existing } = await supabase
-          .from('user_likes')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('site_id', siteId)
-          .maybeSingle();
-
-        if (existing) {
-          await supabase.from('user_likes').delete().eq('id', existing.id);
-          await supabase.rpc('decrement_likes', { site_id: siteId });
-        }
-      } else {
-        // Like
-        console.log('添加点赞...');
-        await supabase.from('user_likes').insert({
-          user_id: user.id,
-          site_id: siteId,
-          created_at: Date.now()
-        });
-        await supabase.rpc('increment_likes', { site_id: siteId });
-      }
-
-      console.log('点赞操作成功');
-    } catch (error: any) {
-      console.error('点赞失败:', error);
-      // 回滚乐观更新
-      if (newLikedState) {
-        setUserLikes(userLikes.filter(id => id !== siteId));
-        setAllSites(allSites.map(s =>
-          s.id === siteId ? { ...s, likes: Math.max(0, s.likes - 1) } : s
-        ));
-      } else {
-        setUserLikes([...userLikes, siteId]);
-        setAllSites(allSites.map(s =>
-          s.id === siteId ? { ...s, likes: s.likes + 1 } : s
-        ));
-      }
-      alert(`点赞失败: ${error.message || '未知错误'}`);
-    }
-  };
-
-  // Favorite functionality
-  const handleFavoriteSite = async (siteId: string) => {
-    if (!user || !hasRealBackend || !supabase) {
-      alert('请先登录');
-      return;
-    }
-
-    // Optimistic update - 立即更新 UI
-    const isCurrentlyFavorited = userFavorites.includes(siteId);
-    const newFavoritedState = !isCurrentlyFavorited;
-
-    // 立即更新本地状态
-    if (newFavoritedState) {
-      setUserFavorites([...userFavorites, siteId]);
-      setAllSites(allSites.map(s =>
-        s.id === siteId ? { ...s, favorites: s.favorites + 1 } : s
-      ));
-    } else {
-      setUserFavorites(userFavorites.filter(id => id !== siteId));
-      setAllSites(allSites.map(s =>
-        s.id === siteId ? { ...s, favorites: Math.max(0, s.favorites - 1) } : s
-      ));
-    }
-
-    // 后台异步执行数据库操作
-    try {
-      console.log('收藏操作开始:', { userId: user.id, siteId });
-
-      if (isCurrentlyFavorited) {
-        // Unfavorite
-        console.log('取消收藏...');
-        const { data: existing } = await supabase
-          .from('user_favorites')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('site_id', siteId)
-          .maybeSingle();
-
-        if (existing) {
-          await supabase.from('user_favorites').delete().eq('id', existing.id);
-          await supabase.rpc('decrement_favorites', { site_id: siteId });
-        }
-      } else {
-        // Favorite
-        console.log('添加收藏...');
-        await supabase.from('user_favorites').insert({
-          user_id: user.id,
-          site_id: siteId,
-          created_at: Date.now()
-        });
-        await supabase.rpc('increment_favorites', { site_id: siteId });
-      }
-
-      console.log('收藏操作成功');
-    } catch (error: any) {
-      console.error('收藏失败:', error);
-      // 回滚乐观更新
-      if (newFavoritedState) {
-        setUserFavorites(userFavorites.filter(id => id !== siteId));
-        setAllSites(allSites.map(s =>
-          s.id === siteId ? { ...s, favorites: Math.max(0, s.favorites - 1) } : s
-        ));
-      } else {
-        setUserFavorites([...userFavorites, siteId]);
-        setAllSites(allSites.map(s =>
-          s.id === siteId ? { ...s, favorites: s.favorites + 1 } : s
-        ));
-      }
-      alert(`收藏失败: ${error.message || '未知错误'}`);
-    }
-  };
-
-  // Check URL Hash for Deep Linking (Preview Mode)
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
       if (hash.startsWith('#site/')) {
-        const siteId = hash.replace('#site/', '');
-        const targetSite = allSites.find(s => s.id === siteId);
-        if (targetSite) {
-          setCurrentSite(targetSite);
+        const id = hash.replace('#site/', '');
+        const site = allSites.find(s => s.id === id);
+        if (site) {
+          setCurrentSite(site);
           setView('VIEWER');
+        } else if (hasRealBackend && supabase) {
+          supabase.from('sites').select('*').eq('id', id).single().then(({ data }) => {
+            if (data) {
+              const mapped = mapSiteFromDB(data);
+              setCurrentSite(mapped);
+              setView('VIEWER');
+            }
+          });
         }
+      } else if (hash === '' && view === 'VIEWER') {
+        setView(user ? 'DASHBOARD' : 'LANDING');
       }
     };
-    handleHashChange(); // Run on sites update
-  }, [allSites]);
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [allSites, hasRealBackend, user, view]);
 
-
-  const navigateTo = (target: string) => {
-    if (target === 'landing') setView('LANDING');
-    if (target === 'prompts') setView('PROMPTS');
-    if (target === 'dashboard') {
-      setEditingSite(null);
-      setView(user?.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
-    }
-    if (target === 'admin') setView('ADMIN');
-    if (target === 'create') {
-      setEditingSite(null);
-      setView('EDITOR');
-    }
-    if (target !== 'viewer') {
-      window.history.pushState(null, document.title, window.location.pathname + window.location.search);
-      window.scrollTo(0, 0);
-    }
-  };
-
-  const handleUsePrompt = (prompt: string) => {
-    setEditingSite(null); // Ensure we are creating a new site
-    // We need to pass the prompt to the Editor. 
-    // Since Editor uses local state for prompt, we can pass it via initialSite or a new prop.
-    // But initialSite is null for new sites.
-    // Let's modify Editor to accept an initialPrompt prop or use a hack.
-    // Actually, we can just create a dummy "new" site object with the prompt if we want, 
-    // but Editor expects initialSite to be a HostedSite or null.
-    // A better way is to pass `initialPrompt` to Editor.
-    // For now, let's just set the view to EDITOR and we might need to modify Editor to accept initialPrompt.
-    // Let's assume we will modify Editor to accept initialPrompt.
-    setView('EDITOR');
-    // We'll need to pass this prompt to the Editor component.
-    // Let's store it in a temporary state.
-  };
-  const [pendingPrompt, setPendingPrompt] = useState<string>('');
-
-  if (view === 'VIEWER' && currentSite) {
-    return <Viewer
-      site={currentSite}
-      user={user}
-      onBack={() => {
-        if (user) {
-          setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
-        } else {
-          setView('LANDING');
-        }
-        window.history.pushState(null, document.title, window.location.pathname + window.location.search);
-      }}
-      onLike={handleLikeSite}
-      onFavorite={handleFavoriteSite}
-      isLiked={userLikes.includes(currentSite.id)}
-      isFavorited={userFavorites.includes(currentSite.id)}
-    />;
-  }
-
-  return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {view !== 'EDITOR' && (
-        <Navbar
-          isLoggedIn={!!user}
-          onLogout={handleLogout}
-
-          onDashboard={() => navigateTo('dashboard')}
-          onLogin={() => setIsAuthOpen(true)}
-          onHome={(view) => navigateTo(view || 'landing')}
-          userEmail={user?.email}
-        />
-      )}
-
-      {isSyncing && (
-        <div className="fixed top-0 left-0 w-full h-1 bg-indigo-100 z-[100]">
-          <div className="h-full bg-indigo-600 animate-pulse w-1/3 mx-auto"></div>
-        </div>
-      )}
-
-      <main className="flex-grow" key={view}>
-        <div className="animate-fade-in h-full">
-          {view === 'LANDING' && (
-            <LandingPage
-              onGetStarted={() => user ? setView('DASHBOARD') : setIsAuthOpen(true)}
-              publicSites={allSites.filter(s => s.published && s.isPublic)}
-              onViewSite={handleViewSite}
-              isLoggedIn={!!user}
-            />
-          )}
-
-          {view === 'DASHBOARD' && user && (
-            <Dashboard
-              sites={allSites.filter(s => s.userId === user.id)}
-              onCreateNew={() => { setEditingSite(null); setView('EDITOR'); }}
-              onViewSite={handleViewSite}
-              onEditSite={handleEditSite}
-              onDeleteSite={handleDeleteSite}
-            />
-          )}
-
-          {view === 'ADMIN' && user && user.role === 'admin' && (
-            <AdminPanel
-              users={allUsers}
-              sites={allSites}
-              onDeleteUser={() => { }} // simplified
-              onDeleteSite={handleDeleteSite}
-              onViewSite={handleViewSite}
-            />
-          )}
-
-          {view === 'PROMPTS' && (
-            <PromptTemplates
-              user={user}
-              onUsePrompt={(prompt) => {
-                setPendingPrompt(prompt);
-                setView('EDITOR');
-              }}
-              onBack={() => setView('LANDING')}
-            />
-          )}
-
-          {view === 'EDITOR' && user && (
-            <Editor
-              initialSite={editingSite}
-              initialPrompt={pendingPrompt}
-              onSave={handleSaveSite}
-              onCancel={() => {
-                setEditingSite(null);
-                setPendingPrompt('');
-                setView(user.role === 'admin' ? 'ADMIN' : 'DASHBOARD');
-              }}
-            />
-          )}
-        </div>
-      </main>
-
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        onLogin={handleLogin}
-      />
-
-      <ConfirmModal
-        isOpen={!!deleteTargetId}
-        onClose={() => setDeleteTargetId(null)}
-        onConfirm={confirmDelete}
-        title="删除确认"
-        message="您确定要删除这个网站吗？此操作无法撤销。"
-        confirmText="删除"
-        cancelText="取消"
-        type="danger"
-      />
-    </div>
-  );
-}
-
-import { ThemeProvider } from './contexts/ThemeContext';
-
-export default function AppWrapper() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <App />
+        <div className="min-h-screen bg-slate-50 dark:bg-cyber-black transition-colors duration-300 font-sans selection:bg-pop-blue/30 dark:selection:bg-neon-blue/30">
+          <Navbar 
+            user={user} 
+            currentView={view} 
+            onViewChange={setView} 
+            onLogout={logout} 
+            onLogin={() => setShowAuthModal(true)}
+            onNewSite={() => { setEditingSite(null); setView('EDITOR'); }} 
+          />
+          
+          <main className="container mx-auto px-4 pt-20 pb-8 max-w-7xl">
+            {view === 'LANDING' && (
+              <Landing 
+                onGetStarted={() => setView(user ? 'DASHBOARD' : 'EDITOR')} 
+                publicSites={allSites.filter(s => s.isPublic)}
+                onViewSite={handleViewSite}
+                isLoggedIn={!!user}
+              />
+            )}
+            {view === 'DASHBOARD' && (
+              <Dashboard 
+                user={user} 
+                sites={allSites} 
+                onEditSite={handleEditSite} 
+                onDeleteSite={setDeleteTargetId} 
+                onViewSite={handleViewSite} 
+                onLikeSite={handleLikeSite} 
+                onFavoriteSite={handleFavoriteSite} 
+                userLikes={userLikes} 
+                userFavorites={userFavorites} 
+                isSyncing={isSyncing} 
+                onSync={loadSites} 
+                onUsePrompt={(p) => { setInitialPrompt(p); setView('EDITOR'); }} 
+              />
+            )}
+            {view === 'EDITOR' && <Editor initialSite={editingSite} initialPrompt={initialPrompt} onSave={handleSaveSite} onCancel={() => setView(user ? 'DASHBOARD' : 'LANDING')} />}
+            {view === 'VIEWER' && currentSite && <Viewer site={currentSite} onBack={() => { window.location.hash = ''; setView(user ? 'DASHBOARD' : 'LANDING'); }} onEdit={handleEditSite} canEdit={user?.id === currentSite.userId} onLike={handleLikeSite} onFavorite={handleFavoriteSite} isLiked={userLikes.includes(currentSite.id)} isFavorited={userFavorites.includes(currentSite.id)} />}
+            {view === 'ADMIN' && user?.role === 'admin' && <AdminPanel sites={allSites} users={allUsers} onEditSite={handleEditSite} onDeleteSite={setDeleteTargetId} />}
+            {view === 'PROMPTS' && <PromptTemplates user={user} onUsePrompt={(p) => { setInitialPrompt(p); setView('EDITOR'); }} onBack={() => setView('DASHBOARD')} />}
+          </main>
+
+          <ConfirmModal isOpen={!!deleteTargetId} title="确认删除" message="确定要删除这个网站吗？此操作无法撤销。" onConfirm={confirmDelete} onCancel={() => setDeleteTargetId(null)} />
+          <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLogin={() => {}} />
+        </div>
       </LanguageProvider>
     </ThemeProvider>
   );
 }
+
+export default App;

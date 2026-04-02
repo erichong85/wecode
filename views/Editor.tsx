@@ -59,6 +59,7 @@ interface EditorDraft {
   title: string;
   description: string;
   prompt: string;
+  htmlContent: string;
   savedAt: number;
   customFonts: string[];
 }
@@ -94,11 +95,12 @@ const clearDraft = () => {
 
 
 const AVAILABLE_MODELS = [
-  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
+  { id: 'glm-4', name: '智谱 GLM-4' },
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
   { id: 'gpt-4o', name: 'GPT-4o' },
-  { id: 'kimi-k2-thinking-cc', name: 'kimi k2 thinking' },
-  { id: 'deepseek-v3.2-cc', name: 'DeepSeek-V3.2' },
-  { id: 'glm-4.6-cc', name: 'GLM 4.6' },
+  { id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet' },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
+  { id: 'deepseek-chat', name: 'DeepSeek Chat' },
 ];
 
 export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSave, onCancel }) => {
@@ -161,8 +163,11 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
         if (draft.customFonts) {
           setCustomFonts(draft.customFonts);
         }
-        // Set default template for new sites
-        setHtmlContent(`<!DOCTYPE html>
+        if (draft.htmlContent) {
+          setHtmlContent(draft.htmlContent);
+        } else {
+          // Set default template for new sites
+          setHtmlContent(`<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -175,6 +180,7 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
   <p>Welcome to my new site!</p>
 </body>
 </html>`);
+        }
       } else {
         // Default template if new site and no draft
         setHtmlContent(`<!DOCTYPE html>
@@ -217,7 +223,7 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
         const draft: EditorDraft = {
           title,
           description,
-          // htmlContent excluded to avoid localStorage quota issues
+          htmlContent,
           prompt,
           savedAt: Date.now(),
           customFonts
@@ -295,17 +301,46 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
   const handleGenerate = async () => {
     if (!prompt) return;
     setIsGenerating(true);
+    let accumulatedCode = '';
+    
     try {
-      const code = await generateHtmlCode(prompt, selectedModel);
-      setHtmlContent(code);
-
-      // Auto-extract title from generated code
-      const titleMatch = code.match(/<title>(.*?)<\/title>/i);
-      if (titleMatch && titleMatch[1]) {
-        setTitle(titleMatch[1]);
-      }
-
-      setActiveTab('preview');
+      // Import the stream version
+      const { generateHtmlCodeStream } = await import('../services/geminiService');
+      
+      await generateHtmlCodeStream(prompt, {
+        onChunk: (chunk) => {
+          accumulatedCode += chunk;
+          setHtmlContent(accumulatedCode);
+        },
+        onFullContent: (fullContent) => {
+          // Auto-extract title from generated code
+          let newTitle = title;
+          const titleMatch = fullContent.match(/<title>(.*?)<\/title>/i);
+          if (titleMatch && titleMatch[1]) {
+            newTitle = titleMatch[1];
+            setTitle(newTitle);
+          }
+          
+          // Save draft immediately
+          const draft: EditorDraft = {
+            title: newTitle,
+            description,
+            htmlContent: fullContent,
+            prompt,
+            savedAt: Date.now(),
+            customFonts
+          };
+          saveDraft(draft);
+          
+          // Switch to preview after completion
+          setPreviewContent(fullContent);
+          setActiveTab('preview');
+        },
+        onError: (error) => {
+          alert(t('editor.generationFailed') + ": " + error);
+        }
+      }, selectedModel);
+      
     } catch (error) {
       console.error("Generation failed:", error);
       alert(t('editor.generationFailed') || "Generation failed. Please check your API key.");
@@ -394,17 +429,15 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
       if (event.data.type === 'ELEMENT_SELECTED') {
         setSelectedElement(event.data.data);
       } else if (event.data.type === 'IMAGE_PASTED') {
-        // Handle pasted image
         handleImagePaste(event.data.data.imageUrl, event.data.data.x, event.data.data.y);
       } else if (event.data.type === 'IMAGE_MOVED') {
-        // Handle image position change
         handleImageMove(event.data.data);
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [isVisualMode, htmlContent]);
+  }, [isVisualMode]); // Removed htmlContent dependency to prevent constant listener re-attachment
 
   // Visual Editor: Generate element selector
   const getElementSelector = (element: Element): string => {
@@ -458,29 +491,29 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
         }
       }
 
-      // 2. Update source of truth
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
-      const element = doc.querySelector(selectedElement.selector);
+      // 2. Update source of truth - using functional state to avoid stale closure
+      setHtmlContent(prev => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(prev, 'text/html');
+        const element = doc.querySelector(selectedElement.selector);
 
-      if (element) {
-        // Update text content while preserving child elements
-        if (element.children.length === 0) {
-          element.textContent = newText;
-        } else {
-          // If has children, update first text node
-          const textNode = Array.from(element.childNodes).find(
-            (node): node is Text => (node as Node).nodeType === Node.TEXT_NODE
-          );
-          if (textNode) {
-            textNode.textContent = newText;
+        if (element) {
+          if (element.children.length === 0) {
+            element.textContent = newText;
+          } else {
+            const textNode = Array.from(element.childNodes).find(
+              (node): node is Text => (node as Node).nodeType === Node.TEXT_NODE
+            );
+            if (textNode) {
+              textNode.textContent = newText;
+            }
           }
+          const newContent = doc.documentElement.outerHTML;
+          addToHistory(newContent);
+          return newContent;
         }
-
-        const newContent = doc.documentElement.outerHTML;
-        addToHistory(newContent);
-        setHtmlContent(newContent);
-      }
+        return prev;
+      });
     } catch (error) {
       console.error('Failed to update text:', error);
     }
@@ -531,39 +564,33 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
         }
       }
 
-      // 2. Update source of truth
-      const parser = new DOMParser();
-      // Use current htmlContent (which might have just been updated with the font link)
-      // Actually, since setHtmlContent is async, we should re-parse the *latest* content if we updated it.
-      // But we can't easily access the pending state.
-      // However, for the style update, we can just parse `htmlContent` again. 
-      // If we injected the link, `htmlContent` in this render cycle is still old.
-      // So we should inject the link into the `doc` we are about to modify for style update.
+      // 2. Update source of truth - using functional state
+      setHtmlContent(prev => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(prev, 'text/html');
 
-      const doc = parser.parseFromString(htmlContent, 'text/html');
-
-      // Re-inject link if needed (since we are parsing from potentially old htmlContent)
-      if (styles.fontFamily && GOOGLE_FONTS_MAP[styles.fontFamily]) {
-        const fontUrl = GOOGLE_FONTS_MAP[styles.fontFamily];
-        if (!doc.querySelector(`link[href="${fontUrl}"]`)) {
-          const link = doc.createElement('link');
-          link.rel = 'stylesheet';
-          link.href = fontUrl;
-          doc.head.appendChild(link);
+        // Re-inject link if needed
+        if (styles.fontFamily && GOOGLE_FONTS_MAP[styles.fontFamily]) {
+          const fontUrl = GOOGLE_FONTS_MAP[styles.fontFamily];
+          if (!doc.querySelector(`link[href="${fontUrl}"]`)) {
+            const link = doc.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = fontUrl;
+            doc.head.appendChild(link);
+          }
         }
-      }
 
-      const element = doc.querySelector(selectedElement.selector) as HTMLElement;
-
-      if (element) {
-        Object.entries(styles).forEach(([key, value]) => {
-          element.style[key as any] = value;
-        });
-
-        const newContent = doc.documentElement.outerHTML;
-        addToHistory(newContent);
-        setHtmlContent(newContent);
-      }
+        const element = doc.querySelector(selectedElement.selector) as HTMLElement;
+        if (element) {
+          Object.entries(styles).forEach(([key, value]) => {
+            element.style[key as any] = value;
+          });
+          const newContent = doc.documentElement.outerHTML;
+          addToHistory(newContent);
+          return newContent;
+        }
+        return prev;
+      });
     } catch (error) {
       console.error('Failed to update style:', error);
     }
@@ -593,24 +620,26 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
           }
         }
 
-        // 2. Update source of truth
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, 'text/html');
-        const element = doc.querySelector(selectedElement.selector) as HTMLElement;
+        // 2. Update source of truth - functional state
+        setHtmlContent(prev => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(prev, 'text/html');
+          const element = doc.querySelector(selectedElement.selector) as HTMLElement;
 
-        if (element) {
-          if (element.tagName === 'IMG') {
-            element.setAttribute('src', base64);
-          } else {
-            element.style.backgroundImage = `url(${base64})`;
-            element.style.backgroundSize = 'cover';
-            element.style.backgroundPosition = 'center';
+          if (element) {
+            if (element.tagName === 'IMG') {
+              element.setAttribute('src', base64);
+            } else {
+              element.style.backgroundImage = `url(${base64})`;
+              element.style.backgroundSize = 'cover';
+              element.style.backgroundPosition = 'center';
+            }
+            const newContent = doc.documentElement.outerHTML;
+            addToHistory(newContent);
+            return newContent;
           }
-
-          const newContent = doc.documentElement.outerHTML;
-          addToHistory(newContent);
-          setHtmlContent(newContent);
-        }
+          return prev;
+        });
       } catch (error) {
         console.error('Failed to upload image:', error);
       }
@@ -638,27 +667,29 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
         iframeDoc.body.appendChild(img);
       }
 
-      // 2. Update source of truth
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
+      // 2. Update source of truth - functional state
+      setHtmlContent(prev => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(prev, 'text/html');
 
-      // Create draggable image element
-      const img = doc.createElement('img');
-      img.src = imageUrl;
-      img.style.position = 'absolute';
-      img.style.left = `${x}px`;
-      img.style.top = `${y}px`;
-      img.style.maxWidth = '300px';
-      img.style.cursor = 'move';
-      img.style.zIndex = '1000';
-      img.className = 'draggable-image';
-      img.setAttribute('data-draggable', 'true');
+        // Create draggable image element
+        const img = doc.createElement('img');
+        img.src = imageUrl;
+        img.style.position = 'absolute';
+        img.style.left = `${x}px`;
+        img.style.top = `${y}px`;
+        img.style.maxWidth = '300px';
+        img.style.cursor = 'move';
+        img.style.zIndex = '1000';
+        img.className = 'draggable-image';
+        img.setAttribute('data-draggable', 'true');
 
-      doc.body.appendChild(img);
+        doc.body.appendChild(img);
 
-      const newContent = doc.documentElement.outerHTML;
-      addToHistory(newContent);
-      setHtmlContent(newContent);
+        const newContent = doc.documentElement.outerHTML;
+        addToHistory(newContent);
+        return newContent;
+      });
     } catch (error) {
       console.error('Failed to paste image:', error);
     }
@@ -677,19 +708,22 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
         }
       }
 
-      // 2. Update source of truth
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
-      const element = doc.querySelector(data.selector) as HTMLElement;
+      // 2. Update source of truth - functional state
+      setHtmlContent(prev => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(prev, 'text/html');
+        const element = doc.querySelector(data.selector) as HTMLElement;
 
-      if (element) {
-        element.style.left = data.left;
-        element.style.top = data.top;
+        if (element) {
+          element.style.left = data.left;
+          element.style.top = data.top;
 
-        const newContent = doc.documentElement.outerHTML;
-        addToHistory(newContent);
-        setHtmlContent(newContent);
-      }
+          const newContent = doc.documentElement.outerHTML;
+          addToHistory(newContent);
+          return newContent;
+        }
+        return prev;
+      });
     } catch (error) {
       console.error('Failed to move image:', error);
     }
@@ -711,25 +745,27 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
         iframeDoc.head.appendChild(style);
       }
 
-      // 2. Update source of truth
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
+      // 2. Update source of truth - functional state
+      setHtmlContent(prev => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(prev, 'text/html');
 
-      // Create style element for font face
-      const style = doc.createElement('style');
-      style.textContent = `
-        @font-face {
-          font-family: '${name}';
-          src: url('${fontData}');
-        }
-      `;
+        // Create style element for font face
+        const style = doc.createElement('style');
+        style.textContent = `
+          @font-face {
+            font-family: '${name}';
+            src: url('${fontData}');
+          }
+        `;
 
-      // Append to head
-      doc.head.appendChild(style);
+        // Append to head
+        doc.head.appendChild(style);
 
-      const newContent = doc.documentElement.outerHTML;
-      addToHistory(newContent);
-      setHtmlContent(newContent);
+        const newContent = doc.documentElement.outerHTML;
+        addToHistory(newContent);
+        return newContent;
+      });
 
       // Update custom fonts list
       setCustomFonts(prev => [...prev, name]);
@@ -1123,15 +1159,18 @@ export const Editor: React.FC<EditorProps> = ({ initialSite, initialPrompt, onSa
                 <label className="block text-xs font-bold text-charcoal dark:text-white uppercase tracking-wider mb-2">
                   {t('editor.aiModel')}
                 </label>
-                <select
+                <input
+                  list="ai-models"
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
+                  placeholder="选择或输入模型名称"
                   className="w-full px-3 py-2 text-sm border-2 border-charcoal dark:border-white rounded-lg focus:outline-none focus:shadow-neo-sm bg-white dark:bg-cyber-black text-charcoal dark:text-white font-medium"
-                >
+                />
+                <datalist id="ai-models">
                   {AVAILABLE_MODELS.map(model => (
                     <option key={model.id} value={model.id}>{model.name}</option>
                   ))}
-                </select>
+                </datalist>
               </div>
 
               <div className="mb-6">

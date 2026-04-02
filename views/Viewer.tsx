@@ -1,35 +1,37 @@
 
 import React, { useState, useEffect } from 'react';
-import { Share2, ArrowLeft, Copy, Check, Download, X, Globe, Heart, Bookmark, Eye } from 'lucide-react';
+import { Share2, ArrowLeft, Copy, Check, Download, X, Globe, Heart, Bookmark, Eye, Edit2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { HostedSite, User } from '../types';
 import { Button } from '../components/Button';
 
 interface ViewerProps {
   site: HostedSite;
-  user: User | null;
   onBack: () => void;
-  onLike?: (siteId: string) => void;
-  onFavorite?: (siteId: string) => void;
-  isLiked?: boolean;
-  isFavorited?: boolean;
+  onEdit: (site: HostedSite) => void;
+  canEdit: boolean;
+  onLike: (siteId: string) => void;
+  onFavorite: (siteId: string) => void;
+  isLiked: boolean;
+  isFavorited: boolean;
 }
 
 export const Viewer: React.FC<ViewerProps> = ({
   site,
-  user,
   onBack,
+  onEdit,
+  canEdit,
   onLike,
   onFavorite,
-  isLiked = false,
-  isFavorited = false
+  isLiked,
+  isFavorited
 }) => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Simulate a real URL for display purposes
-  // In a real app, window.location.origin would be your domain (e.g., https://hostgenie.com)
-  const shareUrl = `${window.location.origin}/#site/${site.id}`;
+  // Use the server-side route /s/[id] which directly returns raw HTML
+  // This ensures QR code scanning works without needing the SPA to load first
+  const shareUrl = `${window.location.origin}/s/${site.id}`;
 
   // Use a reliable QR code API for generation
   // Increased size for better scanning
@@ -111,8 +113,21 @@ export const Viewer: React.FC<ViewerProps> = ({
             </div>
           </div>
 
+          {/* Edit Button */}
+          {canEdit && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onEdit(site)}
+              className="border-2 border-charcoal dark:border-neon-yellow shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold bg-white dark:bg-cyber-gray text-charcoal dark:text-neon-yellow hover:bg-pop-yellow/20 dark:hover:bg-neon-yellow/20"
+            >
+              <Edit2 className="w-4 h-4 mr-1" />
+              <span className="ml-1 hidden sm:inline">编辑</span>
+            </Button>
+          )}
+
           {/* Like Button */}
-          {user && onLike && (
+          {onLike && (
             <Button
               variant={isLiked ? "danger" : "secondary"}
               size="sm"
@@ -135,7 +150,7 @@ export const Viewer: React.FC<ViewerProps> = ({
           )}
 
           {/* Favorite Button */}
-          {user && onFavorite && (
+          {onFavorite && (
             <Button
               variant={isFavorited ? "primary" : "secondary"}
               size="sm"
