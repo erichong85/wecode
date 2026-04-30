@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh repo view:*)",
+      "Bash(gh repo clone:*)",
+      "Bash(npm install)",
+      "Bash(ls:*)",
+      "Bash(npm run dev)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(curl:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(gh auth status:*)",
+      "Bash(git init:*)",
+      "Bash(git add -A)"
+    ]
+  }
+}

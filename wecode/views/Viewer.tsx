@@ -1,0 +1,287 @@
+
+import React, { useState, useEffect } from 'react';
+import { Share2, ArrowLeft, Copy, Check, Download, X, Globe, Heart, Bookmark, Eye, Edit2 } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { HostedSite, User } from '../types';
+import { Button } from '../components/Button';
+import { sanitizeHTML, getSafeSandbox } from '../lib/sanitize';
+
+interface ViewerProps {
+  site: HostedSite;
+  onBack: () => void;
+  onEdit: (site: HostedSite) => void;
+  canEdit: boolean;
+  onLike: (siteId: string) => void;
+  onFavorite: (siteId: string) => void;
+  isLiked: boolean;
+  isFavorited: boolean;
+}
+
+export const Viewer: React.FC<ViewerProps> = ({
+  site,
+  onBack,
+  onEdit,
+  canEdit,
+  onLike,
+  onFavorite,
+  isLiked,
+  isFavorited
+}) => {
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Use the server-side route /s/[id] which directly returns raw HTML
+  // This ensures QR code scanning works without needing the SPA to load first
+  const shareUrl = `${window.location.origin}/s/${site.id}`;
+
+  // Use a reliable QR code API for generation
+  // Increased size for better scanning
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareUrl)}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadSource = () => {
+    const blob = new Blob([site.htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${site.title || 'website'}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadQrCode = async () => {
+    try {
+      const response = await fetch(qrCodeUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `qrcode-${site.id}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Failed to download QR", e);
+      // Fallback: just open image in new tab
+      window.open(qrCodeUrl, '_blank');
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-screen bg-white dark:bg-cyber-black transition-colors duration-300">
+      {/* Viewer Header */}
+      <div className="bg-white dark:bg-cyber-black text-charcoal dark:text-white px-4 py-3 flex items-center justify-between border-b-4 border-charcoal dark:border-neon-blue z-10 transition-colors duration-300">
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="mr-4 border-2 border-charcoal dark:border-neon-pink shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold bg-white dark:bg-cyber-gray text-charcoal dark:text-neon-pink hover:bg-pop-purple/20 dark:hover:bg-neon-pink/20"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            返回
+          </Button>
+          <div>
+            <h2 className="font-bold text-lg text-charcoal dark:text-white">{site.title}</h2>
+            <div className="flex items-center text-xs text-charcoal/60 dark:text-white/60">
+              <span className="truncate max-w-[150px] sm:max-w-md mr-2 font-mono">{shareUrl}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          {/* Stats Display */}
+          <div className="hidden md:flex items-center space-x-4 text-xs text-charcoal/60 dark:text-white/60 mr-2 font-bold">
+            <div className="flex items-center">
+              <Eye className="w-4 h-4 mr-1" />
+              {site.views}
+            </div>
+            <div className="flex items-center">
+              <Heart className="w-4 h-4 mr-1" />
+              {site.likes}
+            </div>
+            <div className="flex items-center">
+              <Bookmark className="w-4 h-4 mr-1" />
+              {site.favorites}
+            </div>
+          </div>
+
+          {/* Edit Button */}
+          {canEdit && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onEdit(site)}
+              className="border-2 border-charcoal dark:border-neon-yellow shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold bg-white dark:bg-cyber-gray text-charcoal dark:text-neon-yellow hover:bg-pop-yellow/20 dark:hover:bg-neon-yellow/20"
+            >
+              <Edit2 className="w-4 h-4 mr-1" />
+              <span className="ml-1 hidden sm:inline">编辑</span>
+            </Button>
+          )}
+
+          {/* Like Button */}
+          {onLike && (
+            <Button
+              variant={isLiked ? "danger" : "secondary"}
+              size="sm"
+              onClick={() => {
+                if (!isLiked) {
+                  confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#FFD700', '#87CEEB', '#FFB6C1', '#90EE90', '#E6E6FA']
+                  });
+                }
+                onLike(site.id);
+              }}
+              className={`border-2 border-charcoal dark:border-neon-pink shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold ${isLiked ? 'bg-pop-pink dark:bg-neon-pink text-charcoal' : 'bg-white dark:bg-cyber-gray text-charcoal dark:text-neon-pink hover:bg-pop-pink/20 dark:hover:bg-neon-pink/20'}`}
+            >
+              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+              <span className="ml-1 hidden sm:inline">{isLiked ? '已赞' : '点赞'}</span>
+            </Button>
+          )}
+
+          {/* Favorite Button */}
+          {onFavorite && (
+            <Button
+              variant={isFavorited ? "primary" : "secondary"}
+              size="sm"
+              onClick={() => onFavorite(site.id)}
+              className={`border-2 border-charcoal dark:border-neon-blue shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold ${isFavorited ? 'bg-pop-blue dark:bg-neon-blue text-charcoal' : 'bg-white dark:bg-cyber-gray text-charcoal dark:text-neon-blue hover:bg-pop-blue/20 dark:hover:bg-neon-blue/20'}`}
+            >
+              <Bookmark className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
+              <span className="ml-1 hidden sm:inline">{isFavorited ? '已收藏' : '收藏'}</span>
+            </Button>
+          )}
+
+          {site.allowSourceDownload && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleDownloadSource}
+              className="hidden lg:inline-flex border-2 border-charcoal dark:border-neon-green shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold bg-pop-green dark:bg-neon-green text-charcoal hover:bg-pop-green/90 dark:hover:bg-neon-green/90"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              源码
+            </Button>
+          )}
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowShareModal(true)}
+            className="border-2 border-charcoal dark:border-neon-yellow shadow-neo-sm hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-bold bg-pop-yellow dark:bg-neon-yellow text-charcoal hover:bg-pop-yellow/90 dark:hover:bg-neon-yellow/90"
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            分享
+          </Button>
+        </div>
+      </div>
+
+      {/* Actual Site Content */}
+      <div className="flex-1 w-full bg-white relative">
+        <iframe
+          srcDoc={sanitizeHTML(site.htmlContent)}
+          title={site.title}
+          className="w-full h-full border-0 absolute inset-0"
+          sandbox={getSafeSandbox()}
+        />
+      </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+
+            <div className="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" onClick={() => setShowShareModal(false)}></div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div className="inline-block align-middle bg-white dark:bg-cyber-gray rounded-xl text-left overflow-hidden shadow-neo dark:shadow-[8px_8px_0px_0px_#FF00FF] border-4 border-charcoal dark:border-neon-pink transform transition-all sm:my-8 sm:max-w-md w-full relative">
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="absolute top-4 right-4 text-charcoal dark:text-white hover:scale-110 transition-transform focus:outline-none bg-white dark:bg-cyber-black border-2 border-charcoal dark:border-neon-pink rounded-full p-1 shadow-neo-sm hover:shadow-none"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="bg-white dark:bg-cyber-gray px-6 pt-8 pb-6">
+                <div className="text-center">
+                  <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-pop-yellow dark:bg-neon-yellow border-2 border-charcoal dark:border-cyber-black shadow-neo mb-6 animate-float-slow">
+                    <Share2 className="h-8 w-8 text-charcoal" />
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-charcoal dark:text-white mb-2">分享你的网站</h3>
+                  <p className="text-sm text-charcoal/70 dark:text-white/70 mb-8 font-medium">
+                    任何人都可以通过链接或扫描下方二维码访问此网站。
+                  </p>
+
+                  {/* QR Code */}
+                  <div className="bg-white dark:bg-cyber-black p-4 rounded-xl border-2 border-charcoal dark:border-neon-blue inline-block mb-8 relative group shadow-neo-sm">
+                    <img
+                      src={qrCodeUrl}
+                      alt="Website QR Code"
+                      className="w-48 h-48 mix-blend-multiply dark:mix-blend-normal dark:invert mx-auto"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-charcoal/10 dark:bg-white/10 rounded-xl cursor-pointer backdrop-blur-sm" onClick={downloadQrCode}>
+                      <span className="bg-pop-green dark:bg-neon-green shadow-neo-sm border-2 border-charcoal px-4 py-2 rounded-full text-xs font-bold text-charcoal flex items-center hover:scale-105 transition-transform">
+                        <Download className="w-4 h-4 mr-1" /> 保存图片
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Link Copy */}
+                  <div className="bg-white dark:bg-cyber-black rounded-xl border-2 border-charcoal dark:border-neon-purple p-2 flex items-center justify-between mb-6 shadow-neo-sm">
+                    <div className="flex items-center overflow-hidden mr-3 pl-2">
+                      <Globe className="w-4 h-4 text-charcoal/60 dark:text-neon-purple mr-2 flex-shrink-0" />
+                      <span className="text-sm font-bold text-charcoal dark:text-white truncate text-left">{shareUrl}</span>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleCopy} className="shadow-neo-sm hover:shadow-none border-2 border-charcoal dark:border-neon-purple shrink-0 bg-pop-purple dark:bg-neon-purple text-charcoal hover:translate-x-[1px] hover:translate-y-[1px]">
+                      {copied ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4 text-white" />}
+                    </Button>
+                  </div>
+
+                  {/* Localhost Warning */}
+                  {window.location.hostname === 'localhost' && (
+                    <div className="bg-pop-yellow/20 border-2 border-charcoal dark:border-neon-yellow rounded-lg p-3 text-left mb-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-charcoal dark:text-neon-yellow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-xs font-bold text-charcoal dark:text-white">本地测试提示</h3>
+                          <div className="mt-1 text-xs text-charcoal/80 dark:text-white/80 font-medium">
+                            <p>您当前在本地环境 (localhost)。手机直接扫码可能无法访问。请将 localhost 替换为电脑 IP，或将项目部署到服务器。</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+              <div className="bg-charcoal/5 dark:bg-black/20 px-4 py-4 sm:px-6 flex justify-center border-t-2 border-charcoal dark:border-white/10">
+                <Button
+                  onClick={() => setShowShareModal(false)}
+                  className="w-full sm:w-auto bg-charcoal dark:bg-white text-white dark:text-charcoal border-2 border-charcoal dark:border-white shadow-neo hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold text-lg px-8 py-2 rounded-lg"
+                >
+                  关闭
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
